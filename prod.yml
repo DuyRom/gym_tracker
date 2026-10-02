@@ -1,0 +1,5 @@
+services:
+  app:
+    image: odbadmin/fit:${FIT_IMAGE_TAG:-latest}
+    ports:
+      - "${PORT:-3000}:3000"
