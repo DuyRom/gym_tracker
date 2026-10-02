@@ -7,6 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Gym Tracker">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./images/favicon.svg">
+  <link rel="alternate icon" type="image/png" href="./images/icon-192.png">
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
   <title>Giáo Án Thể Hình & Tăng Cân Cho Lập Trình Viên (33 Tuổi - 51kg) - Bản Tối Ưu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -613,7 +617,8 @@
           <h1>GIÁO ÁN THỂ HÌNH TĂNG CƠ & CẢI THIỆN TƯ THẾ</h1>
           <p style="color: var(--text-muted); font-size: 15px;">Phác đồ tập luyện 4 buổi Hypertrophy + 1 buổi Active Recovery giải tỏa cột sống, kèm chiến lược thặng dư dinh dưỡng.</p>
         </div>
-        <div class="top-actions">
+        <div class="top-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="btnInstallApp" class="btn btn-primary" style="display: none; background: linear-gradient(135deg, #06B6D4, #3B82F6); border: none; color: #FFF; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);">📲 Cài Đặt App</button>
           <button class="btn btn-primary" onclick="window.print()">🖨️ In / Lưu PDF</button>
         </div>
       </div>
@@ -1373,6 +1378,44 @@
         }, 1000);
       }
     }
+
+    // ===== PWA Service Worker & Install Logic =====
+    let deferredPrompt = null;
+    const btnInstallApp = document.getElementById('btnInstallApp');
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('PWA Service Worker registered:', reg.scope))
+          .catch((err) => console.error('PWA registration failed:', err));
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (btnInstallApp) {
+        btnInstallApp.style.display = 'inline-flex';
+      }
+    });
+
+    if (btnInstallApp) {
+      btnInstallApp.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('User installed the PWA');
+          btnInstallApp.style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      if (btnInstallApp) btnInstallApp.style.display = 'none';
+      console.log('App successfully installed!');
+    });
   </script>
 </body>
 </html>

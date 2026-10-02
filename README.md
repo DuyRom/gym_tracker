@@ -19,6 +19,10 @@ Dự án này là một tài liệu tương tác (Interactive Web Document) và 
    - Có âm thanh (Beep) báo hiệu khi hết giờ.
 5. **Chiến Lược Dinh Dưỡng (Caloric Surplus):**
    - Hướng dẫn thực đơn mẫu 5 bữa/ngày đáp ứng lượng 2,350 kcal cho người cần tăng cân (Từ 51kg lên 58kg).
+6. **Hỗ Trợ PWA & Chế Độ Offline (Progressive Web App):**
+   - Tích hợp `manifest.webmanifest` & `sw.js` (Service Worker).
+   - Tải tức thì từ bộ nhớ đệm (Cache-first), hoạt động bình thường 100% ngay cả khi tầng hầm phòng gym mất sóng 4G/Wifi.
+   - Có thể cài đặt trực tiếp lên màn hình điện thoại (iOS & Android) hoặc máy tính như một ứng dụng Native đích thực.
 
 ## 🚀 Hướng Dẫn Triển Khai Lên VPS (Xem Online)
 
@@ -29,7 +33,7 @@ Dự án này là một tài liệu tương tác (Interactive Web Document) và 
 **1. Copy file lên VPS:**
 ```bash
 # Đứng tại thư mục dự án trên máy tính:
-scp -r ./index.html ./images/ user@your-vps-ip:/var/www/gym/
+scp -r ./index.html ./manifest.webmanifest ./sw.js ./images/ user@your-vps-ip:/var/www/gym/
 ```
 
 **2. Cấu hình Virtual Host Nginx (`/etc/nginx/sites-available/gym`):**
