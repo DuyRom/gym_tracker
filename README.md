@@ -1,6 +1,9 @@
-# 🏋️‍♂️ Gym Tracker PRO - Hệ Thống Theo Dõi Tập Luyện & Thể Hình Full-Stack
+# 🏋️‍♂️ Gym Tracker PRO — Hệ Thống Theo Dõi Tập Luyện & Thể Hình Full-Stack
 
-Ứng dụng Full-Stack hiện đại theo dõi quá trình tập luyện thể hình, bấm giờ buổi tập real-time, lưu trữ lịch sử trên MariaDB/MySQL, và phân tích biểu đồ tăng cơ (Progressive Overload) tối ưu dành riêng cho **Lập Trình Viên (IT)**.
+Ứng dụng Full-Stack hiện đại theo dõi quá trình tập luyện thể hình, bấm giờ buổi tập real-time, lưu trữ lịch sử trên MariaDB, và phân tích biểu đồ tăng cơ (Progressive Overload) tối ưu dành riêng cho **Lập Trình Viên (IT)**.
+
+**🌐 Domain:** [https://fit.odinbi.app](https://fit.odinbi.app)
+**🐳 Docker Hub:** [odbadmin/fit](https://hub.docker.com/r/odbadmin/fit)
 
 ---
 
@@ -49,28 +52,82 @@
 9. **🔐 Đổi Mật Khẩu Cá Nhân:**
    - Thành viên có toàn quyền tự đổi mật khẩu tài khoản của mình bất kỳ lúc nào qua nút Đổi Mật Khẩu trên thanh điều hướng.
 
----
-
-## 🛠️ Tech Stack & Kiến Trúc (Clean Architecture)
-
-- **Framework:** Next.js 15 (App Router, Server Components + API Routes)
-- **Database:** MariaDB / MySQL (Production trên aaPanel) & SQLite (Local Development)
-- **ORM:** Prisma Client (Type-safe query & migrations)
-- **Design Pattern:** Service Layer Pattern (`src/services/session.service.ts`, `src/services/stats.service.ts`)
-- **Authentication:** JWT HTTP-only Cookies & Bcrypt password hashing
-- **Charts:** Chart.js & React-Chartjs-2
-- **Icons & UI:** Lucide React & Vanilla CSS Glassmorphism Design System
+10. **☰ Mobile Navigation Drawer:**
+    - Hamburger menu trượt ra mượt mà trên di động (< 900px), hiển thị toàn bộ điều hướng, thông tin người dùng và các thao tác nhanh.
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Phát Triển Cục Bộ (Local Development)
+## 🛠️ Tech Stack & Kiến Trúc
+
+| Lớp | Công Nghệ |
+|:---|:---|
+| **Framework** | Next.js 15 (App Router, Server Components + API Routes) |
+| **Database** | MariaDB 11.2 (Docker container) |
+| **ORM** | Prisma 6 (Type-safe query & migrations) |
+| **Authentication** | JWT HTTP-only Cookies & Bcrypt password hashing |
+| **Charts** | Chart.js & React-Chartjs-2 |
+| **Icons & UI** | Lucide React & Vanilla CSS Glassmorphism Design System |
+| **Containerization** | Docker multi-stage build (node:20-alpine, standalone output) |
+| **Reverse Proxy** | Nginx (internal) → Shared Reverse Proxy (proxy-net) |
+| **Registry** | Docker Hub (`odbadmin/fit`) |
+
+---
+
+## 🚀 Triển Khai Với Docker (Production)
+
+### Yêu Cầu
+- Docker & Docker Compose v2
+- Mạng Docker `proxy-net` đã tồn tại (từ hệ thống reverse-proxy chung)
+
+### Bước 1: Cấu Hình Biến Môi Trường
+```bash
+cp .env.production.example .env
+nano .env
+# → Đổi DB_PASSWORD, DB_ROOT_PASSWORD, JWT_SECRET bằng giá trị bảo mật thực
+```
+
+### Bước 2: Khởi Chạy (Reverse Proxy Mode)
+```bash
+./start.sh common up -d
+```
+
+### Bước 3: Đồng Bộ Database Schema & Seed Dữ Liệu
+```bash
+./start.sh common db:push
+./start.sh common db:seed    # (Tùy chọn) Nạp giáo án 5 ngày mẫu
+```
+
+### Kiểm Tra & Quản Lý
+```bash
+./start.sh common ps         # Xem trạng thái containers
+./start.sh common logs -f    # Theo dõi logs real-time
+./start.sh common down       # Dừng tất cả services
+```
+
+---
+
+## 🔨 Build & Push Image Lên Docker Hub
+
+```bash
+# Build và push với tag từ .env (FIT_IMAGE_TAG)
+./start.sh build
+
+# Hoặc chỉ định tag cụ thể
+./start.sh build 1.0.2
+```
+
+Image sẽ được push dưới dạng `odbadmin/fit:<tag>` và `odbadmin/fit:latest`.
+
+---
+
+## 💻 Phát Triển Cục Bộ (Local Development)
 
 ```bash
 # 1. Cài đặt dependencies
 npm install
 
-# 2. Sinh Prisma Client và đồng bộ DB cục bộ (SQLite)
-npm run db:local
+# 2. Sinh Prisma Client
+npx prisma generate
 
 # 3. Khởi chạy dev server
 npm run dev
@@ -78,94 +135,102 @@ npm run dev
 
 Mở trình duyệt truy cập: `http://localhost:3000`
 
-Tài khoản Quản Trị Viên mặc định (Default Admin):
-- **Email:** `duyrnt09@gmail.com`
-- **Mật khẩu:** `Odinbi@123#`
-- **Vai trò:** `ADMIN` (Có quyền truy cập Menu Quản Lý User và khởi tạo thành viên)
-
 ---
 
-## 🌐 Hướng Dẫn Triển Khai Trên VPS Qua aaPanel (fit.odinbi.app)
+## 🐳 Kiến Trúc Docker & Reverse Proxy
 
-### Bước 1: Tạo Database MariaDB trên aaPanel
-1. Mở aaPanel → Menu **Database** → Bấm **Add Database**.
-2. Điền thông tin:
-   - **Database Name:** `gym_tracker`
-   - **Username:** `gym_user`
-   - **Password:** (Tạo mật khẩu mạnh của bạn)
-   - **Character Set:** `utf8mb4`
-
-### Bước 2: Thiết Lập Biến Môi Trường (`.env`) Trên VPS
-Tại thư mục dự án trên VPS:
-```bash
-# .env
-DATABASE_URL="mysql://gym_user:MẬT_KHẨU_CỦA_BẠN@localhost:3306/gym_tracker?charset=utf8mb4"
-JWT_SECRET="mot_chuoi_bi_mat_ngau_nhien_dai_32_ky_tu_odinbi_app"
-NEXTAUTH_SECRET="mot_chuoi_bi_mat_ngau_nhien_dai_32_ky_tu_odinbi_app"
-NEXTAUTH_URL="https://fit.odinbi.app"
-NODE_ENV="production"
-PORT=3000
+```text
+Internet
+  │
+  ▼
+┌─────────────────────────────────────────┐
+│  Reverse Proxy (nginx:alpine)           │
+│  Port 443 SSL: fit.odinbi.app           │
+│  Cert: /etc/letsencrypt/live/odinbi.app │
+│  proxy_pass → gym-tracker-nginx:80      │
+└────────────────┬────────────────────────┘
+                 │  proxy-net (external)
+┌────────────────▼────────────────────────┐
+│  gym-tracker-nginx (nginx:alpine)       │
+│  Internal reverse proxy                 │
+│  proxy_pass → app:3000                  │
+└────────────────┬────────────────────────┘
+                 │  default (internal)
+┌────────────────▼────────────────────────┐
+│  gym-tracker-app (odbadmin/fit:latest)  │
+│  Next.js 15 Standalone (node server.js) │
+│  PORT 3000                              │
+└────────────────┬────────────────────────┘
+                 │
+┌────────────────▼────────────────────────┐
+│  gym-tracker-db (mariadb:11.2)          │
+│  Database: gym_tracker                  │
+│  Volume: mariadb_data                   │
+└─────────────────────────────────────────┘
 ```
-
-### Bước 3: Đồng Bộ Schema MariaDB và Seed Giáo Án Mẫu
-```bash
-# Đẩy schema lên MariaDB
-npx prisma db push --schema=prisma/schema.prisma
-
-# Nạp giáo án 5 ngày và tài khoản mẫu
-npx tsx prisma/seed.ts
-
-# Build phiên bản production
-npm run build
-```
-
-### Bước 4: Tạo Node.js Project Trên aaPanel
-1. aaPanel → Menu **Website** → Chọn tab **Node project** → Bấm **Add Node Project**.
-2. Cấu hình:
-   - **Project Name:** `gym-tracker`
-   - **Project Path:** `/www/wwwroot/gym-tracker` (hoặc thư mục bạn đặt mã nguồn)
-   - **Run Opt:** `npm run start` (hoặc lệnh `node_modules/.bin/next start -p 3000`)
-   - **Node Version:** Chọn `v20.x` hoặc `v18.x`
-   - **Port:** `3000`
-3. Bấm **Submit** để aaPanel khởi chạy PM2 background process.
-
-### Bước 5: Cấu Hình Tên Miền & Nginx Reverse Proxy
-1. Trong danh sách Website trên aaPanel, bấm vào dự án Node vừa tạo.
-2. Tại tab **Domain Manager**, thêm tên miền: `fit.odinbi.app`.
-3. Bật **SSL** (chọn Let's Encrypt, tích chọn domain và bấm Apply).
-4. aaPanel sẽ tự động tạo Nginx Reverse Proxy trỏ cổng `80/443` về port `3000`.
 
 ---
 
 ## 📂 Cấu Trúc Thư Mục
 
 ```text
-Gym/
+gym_tracker/
+├── compose.yml                    # Base services: db + app
+├── common.yml                     # Override: join proxy-net + internal nginx
+├── prod.yml                       # Override: standalone (expose port)
+├── start.sh                       # CLI quản lý Docker (build/common/prod)
+├── Dockerfile                     # Multi-stage build (Alpine, standalone)
+├── .dockerignore
+├── .env.example                   # Template biến môi trường
+├── .env.production.example        # Mẫu cấu hình VPS production
+├── server/
+│   └── nginx/conf.d/
+│       └── nginx.common.conf      # Internal nginx → app:3000
 ├── prisma/
-│   ├── schema.prisma          # Schema chuẩn MariaDB/MySQL cho VPS aaPanel
-│   ├── schema.sqlite.prisma   # Schema cho SQLite khi code cục bộ
-│   └── seed.ts                # Dữ liệu mẫu giáo án 5 ngày & tài khoản
-├── public/                    # Assets ảnh mô phỏng 3D, icon PWA, manifest, service worker
+│   ├── schema.prisma              # Schema MariaDB/MySQL
+│   └── seed.ts                    # Dữ liệu mẫu giáo án 5 ngày & tài khoản
+├── public/                        # Assets: icon PWA, ảnh 3D, manifest, SW
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx         # Root layout, PWA meta, theme provider
-│   │   ├── page.tsx           # Dashboard tổng quan, thẻ stats, charts, heatmap
-│   │   ├── globals.css        # Hệ thống giao diện Dark Mode Glassmorphism
-│   │   ├── workout/page.tsx   # ⭐ Bấm giờ Start/Stop, ghi tạ/reps, pháo hoa hoàn thành
-│   │   ├── schedule/page.tsx  # Lịch tập 5 ngày, video hướng dẫn, lưu ý gù lưng IT
-│   │   ├── history/page.tsx   # Lịch sử tập chi tiết, bộ lọc trạng thái
-│   │   ├── analytics/page.tsx # Biểu đồ Progressive Overload tăng dần mức tạ
-│   │   ├── gallery/page.tsx   # Thư viện mô phỏng 3D góc khớp
-│   │   ├── nutrition/page.tsx # Bộ tính macro theo cân nặng & thực đơn 5 bữa
-│   │   ├── login/page.tsx     # Đăng nhập & nút đăng nhập demo nhanh
-│   │   ├── register/page.tsx  # Đăng ký tài khoản mới
-│   │   └── api/               # RESTful API routes (auth, sessions, stats, exercises)
-│   ├── components/            # UI components (Header, BottomNav, Charts, RestTimer, Modals)
-│   ├── lib/                   # Prisma Client, JWT auth helper, date utils
-│   ├── services/              # Clean Architecture Service Layer
-│   └── types/                 # TypeScript interfaces
-├── .env.example
-├── next.config.mjs
+│   │   ├── layout.tsx             # Root layout, PWA meta, theme provider
+│   │   ├── page.tsx               # Dashboard: stats, charts, heatmap
+│   │   ├── globals.css            # Dark Mode Glassmorphism Design System
+│   │   ├── workout/page.tsx       # ⭐ Bấm giờ, ghi tạ/reps, confetti
+│   │   ├── schedule/page.tsx      # Giáo án 5 ngày, video hướng dẫn
+│   │   ├── history/page.tsx       # Lịch sử tập chi tiết
+│   │   ├── analytics/page.tsx     # Biểu đồ Progressive Overload
+│   │   ├── gallery/page.tsx       # Thư viện mô phỏng 3D góc khớp
+│   │   ├── nutrition/page.tsx     # Bộ tính macro & thực đơn 5 bữa
+│   │   ├── login/page.tsx         # Đăng nhập
+│   │   ├── register/page.tsx      # Đăng ký (Admin-only)
+│   │   ├── users/page.tsx         # Quản lý người dùng (Admin)
+│   │   └── api/                   # RESTful API routes
+│   ├── components/
+│   │   └── layout/
+│   │       ├── Header.tsx         # Header + hamburger menu
+│   │       ├── MobileDrawer.tsx   # Slide-out navigation drawer
+│   │       └── BottomNav.tsx      # Mobile bottom navigation
+│   ├── lib/                       # Prisma Client, JWT auth, date utils
+│   ├── services/                  # Clean Architecture Service Layer
+│   └── types/                     # TypeScript interfaces
+├── next.config.mjs                # output: 'standalone'
 ├── tsconfig.json
 └── package.json
 ```
+
+---
+
+## 📝 start.sh CLI Reference
+
+| Lệnh | Mô tả |
+|:---|:---|
+| `./start.sh common up -d` | Khởi chạy qua reverse proxy chung |
+| `./start.sh common down` | Dừng tất cả containers |
+| `./start.sh common logs -f` | Xem live logs |
+| `./start.sh common ps` | Trạng thái containers |
+| `./start.sh common db:push` | Đồng bộ Prisma schema vào MariaDB |
+| `./start.sh common db:seed` | Nạp dữ liệu giáo án mẫu |
+| `./start.sh prod up -d` | Chạy standalone (expose port 3000) |
+| `./start.sh build` | Build & push image lên Docker Hub |
+| `./start.sh build 1.0.2` | Build & push với tag cụ thể |
+| `./start.sh help` | Hiển thị hướng dẫn đầy đủ |
