@@ -212,7 +212,7 @@
       min-width: 140px;
       padding: 12px 18px;
       border-radius: 12px;
-      border: none;
+      border: 1px solid transparent;
       background: transparent;
       color: var(--text-muted);
       font-weight: 600;
@@ -233,6 +233,45 @@
       border: 1px solid rgba(6, 182, 212, 0.4);
       color: #67E8F9;
       box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.25s, transform 0.2s;
+    }
+
+    .gallery-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .gallery-card-img {
+      height: 220px;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gallery-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-card-img:hover img {
+      transform: scale(1.03);
     }
 
     .tab-panel {
@@ -304,6 +343,7 @@
 
     table {
       width: 100%;
+      min-width: 680px;
       border-collapse: collapse;
       text-align: left;
       font-size: 14px;
@@ -573,32 +613,76 @@
 
     /* ===== MOBILE (Max 768px) ===== */
     @media (max-width: 768px) {
-      .container { padding: 16px 12px; }
-      .hero-card { padding: 20px; border-radius: 16px; margin-bottom: 20px; }
-      .title-area h1 { font-size: 22px; line-height: 1.3; }
+      .container { padding: 14px 10px; }
+      .hero-card { padding: 20px 16px; border-radius: 16px; margin-bottom: 16px; }
+      .title-area h1 { font-size: 20px; line-height: 1.35; }
       
-      .tab-nav { padding: 4px; border-radius: 12px; margin-bottom: 20px; }
-      .tab-btn { min-width: 130px; font-size: 13px; padding: 10px; }
+      /* Cân đối 4 tab thành lưới 2x2 cân xứng tuyệt đối, border đều đặn không bị lệch */
+      .tab-nav {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 6px;
+        border-radius: 16px;
+        overflow-x: visible;
+        margin-bottom: 18px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .tab-btn {
+        min-width: 0;
+        width: 100%;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 12px 6px;
+        white-space: normal;
+        line-height: 1.35;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .tab-btn.active {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
+        border: 1px solid #06B6D4;
+        color: #67E8F9;
+        box-shadow: 0 2px 10px rgba(6, 182, 212, 0.25);
+      }
       
-      .day-card { padding: 16px; border-radius: 16px; margin-bottom: 20px; }
-      .day-name { font-size: 18px; line-height: 1.4; margin-bottom: 4px; }
-      .day-focus { font-size: 13px; }
-      .day-header { padding-bottom: 12px; margin-bottom: 16px; }
+      .day-card { padding: 16px 14px; border-radius: 16px; margin-bottom: 18px; }
+      .day-name { font-size: 17px; line-height: 1.4; margin-bottom: 4px; }
+      .day-focus { font-size: 12.5px; }
+      .day-header { padding-bottom: 12px; margin-bottom: 14px; }
 
-      .stat-grid { grid-template-columns: 1fr; } /* Stack thành 1 cột trên màn hình nhỏ */
+      .stat-grid { grid-template-columns: 1fr; gap: 10px; }
       
-      th, td { padding: 10px; font-size: 13px; }
-      .img-preview-box { width: 80px; height: 60px; }
+      .table-responsive {
+        border-radius: 12px;
+        -webkit-overflow-scrolling: touch;
+      }
+      th, td { padding: 10px 8px; font-size: 12.5px; }
+      .img-preview-box { width: 72px; height: 54px; }
       .exercise-name { font-size: 13px; }
       
       .timer-widget { 
-        bottom: 12px; right: 12px; left: 12px; 
-        padding: 12px 16px; border-radius: 16px;
+        bottom: 10px; right: 10px; left: 10px; 
+        padding: 10px 14px; border-radius: 14px;
         flex-direction: row; justify-content: space-between;
       }
-      .timer-display { font-size: 20px; }
+      .timer-display { font-size: 19px; min-width: 65px; }
       .timer-controls { gap: 4px; }
-      .btn-timer { padding: 6px 10px; font-size: 11px; }
+      .btn-timer { padding: 5px 8px; font-size: 11px; }
+
+      .gallery-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+      }
+      .gallery-card-img {
+        height: 190px !important;
+      }
     }
   </style>
 </head>
@@ -869,7 +953,7 @@
           <div class="day-title">
             <span class="day-tag" style="background: rgba(139, 92, 246, 0.2); color: #C4B5FD; border-color: rgba(139, 92, 246, 0.4);">THỨ 4</span>
             <div>
-              <div class="day-name" style="color: #DDD6FE;">Active Recovery & Mobility</div>
+              <div class="day-name" style="color: #DDD6FE;">Active Recovery & Mobility (Phục Hồi Tích Cực)</div>
               <div class="day-focus">Nghỉ sạc hệ thần kinh CNS, duy trì độ linh hoạt, bơm máu tươi nuôi cơ bắp</div>
             </div>
           </div>
@@ -877,17 +961,17 @@
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-          <div class="stat-box" style="background: rgba(15, 23, 42, 0.8);">
-            <strong style="color: #A78BFA; font-size: 15px; margin-bottom: 6px;">1. Đi bộ dốc (Incline Walk)</strong>
-            <p style="font-size: 13px; color: var(--text-muted);">15–20 phút | Độ dốc 4–6% | Tốc độ 4.8 km/h. Tăng lưu lượng máu nhẹ nhàng.</p>
+          <div class="stat-box" style="background: rgba(15, 23, 42, 0.8); border-left: 3px solid #8B5CF6;">
+            <strong style="color: #A78BFA; font-size: 15px; margin-bottom: 6px;">1. Đi bộ dốc trên máy chạy bộ (Incline Treadmill)</strong>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"><strong>15–20 phút</strong> | Sử dụng trực tiếp <strong>máy chạy bộ tại công ty</strong>: Bấm Start ➔ Chỉnh <strong>Incline (Độ dốc) 5–8%</strong> ➔ Chỉnh <strong>Speed (Tốc độ đi bộ) 4.2–4.8 km/h</strong>. Tuyệt đối không cần chạy; đi bộ dốc giúp tim đập nhẹ vùng Zone 2, bơm máu phục hồi cơ bắp và cực kỳ êm ái cho khớp gối/cột sống.</p>
           </div>
-          <div class="stat-box" style="background: rgba(15, 23, 42, 0.8);">
+          <div class="stat-box" style="background: rgba(15, 23, 42, 0.8); border-left: 3px solid #8B5CF6;">
             <strong style="color: #A78BFA; font-size: 15px; margin-bottom: 6px;">2. Giãn cơ linh hoạt (Mobility)</strong>
-            <p style="font-size: 13px; color: var(--text-muted);">10–15 phút. Bài tập Giãn háng chiến binh, Luồn kim giãn lưng trên, Rắn hổ mang.</p>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"><strong>10–15 phút</strong>. Thực hiện các bài Giãn háng chiến binh (World's Greatest Stretch), Luồn kim giãn lưng trên, Rắn hổ mang mở ngực giải tỏa áp lực ngồi ghế.</p>
           </div>
-          <div class="stat-box" style="background: rgba(15, 23, 42, 0.8);">
-            <strong style="color: #A78BFA; font-size: 15px; margin-bottom: 6px;">3. Treo thả lỏng (Passive Dead Hang)</strong>
-            <p style="font-size: 13px; color: var(--text-muted);">2 hiệp x 20–30s (nếu thấy thoải mái). Kéo giãn tự nhiên khoang đĩa đệm và cơ lưng.</p>
+          <div class="stat-box" style="background: rgba(15, 23, 42, 0.8); border-left: 3px solid #8B5CF6;">
+            <strong style="color: #A78BFA; font-size: 15px; margin-bottom: 6px;">3. Treo thả lỏng người (Dead Hang)</strong>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;"><strong>2 hiệp x 20–30s</strong> trên khung treo xà OneTwoFit. Thả lỏng toàn bộ thân dưới để trọng lực kéo giãn tự nhiên các khoang đốt sống thắt lưng.</p>
           </div>
         </div>
       </div>
@@ -1107,12 +1191,12 @@
         <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 8px; color: #FFFFFF;">Thư Viện Cơ Sinh Học 3D & Kỹ Thuật Trụ Cột</h2>
         <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Các hình ảnh mô phỏng 3D chuyên sâu chỉ rõ góc độ khớp, điểm bám cơ và các sai lầm chấn thương thường gặp.</p>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+        <div class="gallery-grid">
           
           <!-- Card 1: RDL -->
-          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden;">
-            <div style="height: 240px; cursor: pointer; overflow: hidden;" onclick="openModal('images/rdl_form.jpg', 'Dumbbell Romanian Deadlift (RDL)', 'Bản lề hông (Hip Hinge) hoàn hảo: Giữ thẳng cột sống tự nhiên, đẩy khớp hông ra sau, đầu gối chỉ hơi cong mềm. Tạ luôn lướt sát mặt trước cẳng chân.')">
-              <img src="images/rdl_form.jpg" alt="RDL Form" style="width: 100%; height: 100%; object-fit: cover;">
+          <div class="gallery-card">
+            <div class="gallery-card-img" onclick="openModal('images/rdl_form.jpg', 'Dumbbell Romanian Deadlift (RDL)', 'Bản lề hông (Hip Hinge) hoàn hảo: Giữ thẳng cột sống tự nhiên, đẩy khớp hông ra sau, đầu gối chỉ hơi cong mềm. Tạ luôn lướt sát mặt trước cẳng chân.')">
+              <img src="images/rdl_form.jpg" alt="RDL Form">
             </div>
             <div style="padding: 16px 20px;">
               <h3 style="font-size: 17px; font-weight: 700; color: #F8FAFC; margin-bottom: 6px;">Dumbbell Romanian Deadlift (RDL)</h3>
@@ -1122,9 +1206,9 @@
           </div>
 
           <!-- Card 2: Lat Pulldown -->
-          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden;">
-            <div style="height: 240px; cursor: pointer; overflow: hidden;" onclick="openModal('images/lat_pulldown_form.jpg', 'Kéo Cáp Lưng Xô (Lat Pulldown)', 'Kỹ thuật mở ngực hạ bả vai (Scapular depression & retraction): Khép chặt 2 bả vai xuống dưới trước khi kéo, kéo thanh đòn về phía xương quai xanh.')">
-              <img src="images/lat_pulldown_form.jpg" alt="Lat Pulldown" style="width: 100%; height: 100%; object-fit: cover;">
+          <div class="gallery-card">
+            <div class="gallery-card-img" onclick="openModal('images/lat_pulldown_form.jpg', 'Kéo Cáp Lưng Xô (Lat Pulldown)', 'Kỹ thuật mở ngực hạ bả vai (Scapular depression & retraction): Khép chặt 2 bả vai xuống dưới trước khi kéo, kéo thanh đòn về phía xương quai xanh.')">
+              <img src="images/lat_pulldown_form.jpg" alt="Lat Pulldown">
             </div>
             <div style="padding: 16px 20px;">
               <h3 style="font-size: 17px; font-weight: 700; color: #F8FAFC; margin-bottom: 6px;">Kéo Cáp Lưng Xô (Lat Pulldown)</h3>
@@ -1134,9 +1218,9 @@
           </div>
 
           <!-- Card 3: Bench Press -->
-          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden;">
-            <div style="height: 240px; cursor: pointer; overflow: hidden;" onclick="openModal('images/bench_press_form.jpg', 'Đẩy Ngực Nằm Ghế (Bench Press Form)', 'Góc cùi chỏ an toàn 45°-60°: Tuyệt đối tránh bạnh cùi chỏ 90° ngang vai vì sẽ chèn ép và xé rách chóp xoay vai. Bàn chân đạp chắc chắn xuống sàn.')">
-              <img src="images/bench_press_form.jpg" alt="Bench Press Form" style="width: 100%; height: 100%; object-fit: cover;">
+          <div class="gallery-card">
+            <div class="gallery-card-img" onclick="openModal('images/bench_press_form.jpg', 'Đẩy Ngực Nằm Ghế (Bench Press Form)', 'Góc cùi chỏ an toàn 45°-60°: Tuyệt đối tránh bạnh cùi chỏ 90° ngang vai vì sẽ chèn ép và xé rách chóp xoay vai. Bàn chân đạp chắc chắn xuống sàn.')">
+              <img src="images/bench_press_form.jpg" alt="Bench Press Form">
             </div>
             <div style="padding: 16px 20px;">
               <h3 style="font-size: 17px; font-weight: 700; color: #F8FAFC; margin-bottom: 6px;">Đẩy Ngực Nằm Ghế (Bench / DB Press)</h3>
