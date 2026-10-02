@@ -90,11 +90,11 @@ fi
 
 if [[ "$1" == "db:push" ]]; then
   echo "🔄 Running Prisma db push inside app container..."
-  docker compose $COMPOSE_FILES exec app npx --no-install prisma db push
+  docker compose $COMPOSE_FILES exec app prisma db push --skip-generate
   exit 0
 elif [[ "$1" == "db:seed" ]]; then
   echo "🌱 Running Prisma db seed inside app container..."
-  docker compose $COMPOSE_FILES exec app npx --no-install prisma db seed
+  docker compose $COMPOSE_FILES exec app node prisma/seed.js
   exit 0
 fi
 
