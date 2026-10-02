@@ -1,8 +1,8 @@
 {
   "id": "/?source=pwa",
-  "name": "Gym Tracker - Giáo Án Thể Hình & Tăng Cân",
+  "name": "Gym Tracker - Giáo Án Thể Hình & Tăng Cơ",
   "short_name": "Gym Tracker",
-  "description": "Giáo án thể hình & tăng cân khoa học chuyên biệt cho Lập Trình Viên (33 Tuổi - 51kg)",
+  "description": "Giáo án thể hình & xây dựng cơ bắp khoa học chuyên biệt cho Lập Trình Viên",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

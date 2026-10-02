@@ -18,7 +18,7 @@ Dự án này là một tài liệu tương tác (Interactive Web Document) và 
    - Nổi (Floating) trên màn hình để canh thời gian nghỉ giữa hiệp (60s, 75s, 90s).
    - Có âm thanh (Beep) báo hiệu khi hết giờ.
 5. **Chiến Lược Dinh Dưỡng (Caloric Surplus):**
-   - Hướng dẫn thực đơn mẫu 5 bữa/ngày đáp ứng lượng 2,350 kcal cho người cần tăng cân (Từ 51kg lên 58kg).
+   - Hướng dẫn thực đơn mẫu 5 bữa/ngày khoa học với tỷ lệ macro chuẩn hóa giúp phát triển cơ bắp nạc bền vững.
 6. **Hỗ Trợ PWA & Chế Độ Offline (Progressive Web App):**
    - Tích hợp `manifest.webmanifest` & `sw.js` (Service Worker).
    - Tải tức thì từ bộ nhớ đệm (Cache-first), hoạt động bình thường 100% ngay cả khi tầng hầm phòng gym mất sóng 4G/Wifi.
