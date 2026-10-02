@@ -1,0 +1,108 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  avatarUrl     String?
+  role          String    @default("MEMBER")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      WorkoutSession[]
+  accounts      Account[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String  @default("credentials")
+  provider          String  @default("credentials")
+  providerAccountId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model WorkoutDay {
+  id          String   @id @default(cuid())
+  dayOfWeek   Int      // 1=T2, 2=T3, 3=T4, 4=T5, 5=T6
+  name        String   // "Thân Trên A (Upper A)"
+  focus       String   // "Ngực Ngang, Lưng Xô, Lưng Dày & Tay Sau"
+  dayType     String   @default("TRAINING") // TRAINING | RECOVERY
+  durationMin Int      @default(45)
+
+  exercises   Exercise[]
+  sessions    WorkoutSession[]
+
+  @@map("workout_days")
+}
+
+model Exercise {
+  id            String   @id @default(cuid())
+  workoutDayId  String
+  orderIndex    Int
+  nameVi        String
+  nameEn        String
+  equipment     String
+  sets          Int
+  repsMin       Int
+  repsMax       Int
+  rir           String
+  techniqueNote String
+  videoUrl      String?
+
+  workoutDay    WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  sessionExercises SessionExercise[]
+
+  @@map("exercises")
+}
+
+model WorkoutSession {
+  id            String    @id @default(cuid())
+  userId        String
+  workoutDayId  String
+  date          DateTime  @default(now())
+  startedAt     DateTime?
+  endedAt       DateTime?
+  durationMin   Int?
+  status        String    @default("PLANNED") // PLANNED, IN_PROGRESS, COMPLETED, MISSED
+  notes         String?
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutDay    WorkoutDay     @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
+  exercises     SessionExercise[]
+
+  @@index([userId, status])
+  @@index([userId, date])
+  @@map("workout_sessions")
+}
+
+model SessionExercise {
+  id              String   @id @default(cuid())
+  sessionId       String
+  exerciseId      String
+  completed       Boolean  @default(false)
+  actualSets      Int?
+  actualReps      String?
+  actualWeightKg  Float?
+  notes           String?
+
+  session         WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise        Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, exerciseId])
+  @@map("session_exercises")
+}
