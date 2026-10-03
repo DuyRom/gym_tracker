@@ -137,22 +137,10 @@ export default function MobileDrawer({
         {/* Drawer Header */}
         <div className="mobile-drawer-header">
           <Link href="/" className="brand-logo" onClick={onClose}>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 10,
-                background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 15px rgba(6, 182, 212, 0.4)',
-              }}
-            >
+            <div className="brand-icon-box" style={{ width: 34, height: 34 }}>
               <Dumbbell size={18} color="#fff" />
             </div>
             <span>Gym Tracker</span>
-            <span className="brand-badge">PRO</span>
           </Link>
 
           <button

@@ -71,25 +71,25 @@ export default function HistoryPage() {
       </section>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div className="tab-group" style={{ marginBottom: 20, maxWidth: 'fit-content' }}>
         <button
-          className={`btn ${filter === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}
+          className={`tab-btn ${filter === 'ALL' ? 'active' : ''}`}
           onClick={() => setFilter('ALL')}
-          style={{ padding: '8px 16px', fontSize: 13 }}
+          type="button"
         >
           Tất cả ({sessions.length})
         </button>
         <button
-          className={`btn ${filter === 'COMPLETED' ? 'btn-success' : 'btn-secondary'}`}
+          className={`tab-btn ${filter === 'COMPLETED' ? 'active' : ''}`}
           onClick={() => setFilter('COMPLETED')}
-          style={{ padding: '8px 16px', fontSize: 13 }}
+          type="button"
         >
           Đã hoàn thành ({sessions.filter((s) => s.status === 'COMPLETED').length})
         </button>
         <button
-          className={`btn ${filter === 'MISSED' ? 'btn-danger' : 'btn-secondary'}`}
+          className={`tab-btn ${filter === 'MISSED' ? 'active' : ''}`}
           onClick={() => setFilter('MISSED')}
-          style={{ padding: '8px 16px', fontSize: 13 }}
+          type="button"
         >
           Bỏ lỡ ({sessions.filter((s) => s.status === 'MISSED').length})
         </button>

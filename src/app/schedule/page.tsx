@@ -46,7 +46,7 @@ export default function SchedulePage() {
         </div>
 
         {/* Tab Selector */}
-        <div className="tab-nav" style={{ marginBottom: 0 }}>
+        <div className="tab-group" style={{ marginBottom: 0 }}>
           {days.map((d) => {
             const dayLabels = ['Thứ 2 (Upper A)', 'Thứ 3 (Lower A)', 'Thứ 4 (Active Recovery)', 'Thứ 5 (Upper B)', 'Thứ 6 (Lower B)'];
             const label = dayLabels[d.dayOfWeek - 1] || `Thứ ${d.dayOfWeek + 1}`;
@@ -55,6 +55,7 @@ export default function SchedulePage() {
                 key={d.id}
                 className={`tab-btn ${activeTab === d.dayOfWeek ? 'active' : ''}`}
                 onClick={() => setActiveTab(d.dayOfWeek)}
+                type="button"
               >
                 {label}
               </button>
@@ -69,9 +70,9 @@ export default function SchedulePage() {
           <div className="day-header">
             <div className="day-title">
               <span className="day-tag" style={{
-                background: currentDay.dayType === 'RECOVERY' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(6, 182, 212, 0.15)',
-                color: currentDay.dayType === 'RECOVERY' ? '#C4B5FD' : '#67E8F9',
-                borderColor: currentDay.dayType === 'RECOVERY' ? 'rgba(139, 92, 246, 0.4)' : 'rgba(6, 182, 212, 0.3)',
+                background: currentDay.dayType === 'RECOVERY' ? 'rgba(139, 92, 246, 0.14)' : 'rgba(14, 165, 233, 0.12)',
+                color: currentDay.dayType === 'RECOVERY' ? '#C4B5FD' : '#38BDF8',
+                borderColor: currentDay.dayType === 'RECOVERY' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(14, 165, 233, 0.28)',
               }}>
                 THỨ {currentDay.dayOfWeek + 1 === 7 ? '7' : currentDay.dayOfWeek + 1}
               </span>

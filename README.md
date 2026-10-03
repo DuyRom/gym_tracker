@@ -1,4 +1,4 @@
-# 🏋️‍♂️ Gym Tracker PRO — Hệ Thống Theo Dõi Tập Luyện & Thể Hình Full-Stack
+# 🏋️‍♂️ Gym Tracker — Hệ Thống Theo Dõi Tập Luyện & Thể Hình Full-Stack
 
 Ứng dụng Full-Stack hiện đại theo dõi quá trình tập luyện thể hình, bấm giờ buổi tập real-time, lưu trữ lịch sử trên MariaDB, và phân tích biểu đồ tăng cơ (Progressive Overload) tối ưu dành riêng cho **Lập Trình Viên (IT)**.
 

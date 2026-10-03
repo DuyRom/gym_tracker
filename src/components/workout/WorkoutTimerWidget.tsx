@@ -1,13 +1,31 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Volume2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function WorkoutTimerWidget() {
   const [duration, setDuration] = useState<number>(75);
   const [timeRemaining, setTimeRemaining] = useState<number>(75);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isMinimized, setIsMinimized] = useState<boolean>(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Restore minimized preference if stored
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('gym_timer_minimized');
+      if (stored !== null) {
+        setIsMinimized(stored === 'true');
+      }
+    } catch {}
+  }, []);
+
+  const handleToggleMinimize = (minimized: boolean) => {
+    setIsMinimized(minimized);
+    try {
+      localStorage.setItem('gym_timer_minimized', String(minimized));
+    } catch {}
+  };
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -78,6 +96,48 @@ export default function WorkoutTimerWidget() {
     };
   }, [isRunning]);
 
+  // If minimized, render a sleek, non-intrusive floating capsule trigger
+  if (isMinimized) {
+    return (
+      <button
+        onClick={() => handleToggleMinimize(false)}
+        className={`timer-capsule-trigger ${isRunning ? 'running' : ''}`}
+        aria-label="Mở bộ đếm thời gian nghỉ hiệp"
+        title="Bấm để mở bấm giờ nghỉ hiệp"
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Timer size={15} color={isRunning ? '#10B981' : '#38BDF8'} />
+          {isRunning && (
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: '#10B981',
+                boxShadow: '0 0 8px #10B981',
+              }}
+            />
+          )}
+        </div>
+        <span
+          style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontWeight: 700,
+            fontSize: 13,
+            color: isRunning ? '#34D399' : '#38BDF8',
+          }}
+        >
+          {formatTime(timeRemaining)}
+        </span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+          Nghỉ hiệp
+        </span>
+        <ChevronUp size={14} style={{ color: 'var(--text-dim)', marginLeft: 2 }} />
+      </button>
+    );
+  }
+
+  // Expanded full floating widget
   return (
     <aside className="timer-widget" aria-label="Rest Timer">
       <div>
@@ -91,38 +151,52 @@ export default function WorkoutTimerWidget() {
         <button
           className={`btn-timer ${duration === 60 ? 'active' : ''}`}
           onClick={() => handleSelectPreset(60)}
+          type="button"
         >
           60s
         </button>
         <button
           className={`btn-timer ${duration === 75 ? 'active' : ''}`}
           onClick={() => handleSelectPreset(75)}
+          type="button"
         >
           75s
         </button>
         <button
           className={`btn-timer ${duration === 90 ? 'active' : ''}`}
           onClick={() => handleSelectPreset(90)}
+          type="button"
         >
           90s
         </button>
 
         <button
-          className="btn-timer"
-          style={{ background: '#06B6D4', color: '#000', fontWeight: 800, padding: '6px 12px' }}
+          className="btn-timer-primary"
           onClick={toggleTimer}
+          type="button"
         >
-          {isRunning ? <Pause size={13} /> : <Play size={13} />}
+          {isRunning ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}
           <span>{isRunning ? 'DỪNG' : timeRemaining <= 0 ? 'LẠI' : 'BẮT ĐẦU'}</span>
         </button>
 
         <button
-          className="btn-timer"
-          style={{ padding: '6px 8px' }}
+          className="timer-icon-btn"
           onClick={resetTimer}
-          title="Đặt lại"
+          title="Đặt lại thời gian"
+          type="button"
         >
-          <RotateCcw size={12} />
+          <RotateCcw size={13} />
+        </button>
+
+        <button
+          className="timer-icon-btn"
+          onClick={() => handleToggleMinimize(true)}
+          title="Thu nhỏ bộ đếm"
+          aria-label="Thu nhỏ bộ đếm"
+          type="button"
+          style={{ marginLeft: 4 }}
+        >
+          <ChevronDown size={15} />
         </button>
       </div>
     </aside>

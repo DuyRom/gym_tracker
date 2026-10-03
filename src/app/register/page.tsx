@@ -29,7 +29,7 @@ export default function RegisterPage() {
         </h1>
 
         <p style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
-          Hệ thống <strong>Gym Tracker PRO</strong> áp dụng chính sách cấp tài khoản nội bộ. 
+          Hệ thống <strong>Gym Tracker</strong> áp dụng chính sách cấp tài khoản nội bộ. 
           Người dùng không thể tự động đăng ký mà phải do <strong>Quản Trị Viên (Admin)</strong> tạo trong menu quản lý thành viên.
         </p>
 

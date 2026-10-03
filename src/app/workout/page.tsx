@@ -211,12 +211,12 @@ export default function WorkoutPage() {
   return (
     <main className="container">
       {/* Active Session Timer Banner or Day Selection */}
-      <section className="hero-card" style={{ borderLeft: activeSession ? '4px solid #10B981' : '1px solid var(--card-border)' }}>
+      <section className="hero-card" style={{ borderLeft: activeSession ? '3px solid #10B981' : undefined }}>
         <div className="hero-top">
           <div className="title-area">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               {activeSession ? (
-                <span className="badge badge-emerald" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span className="badge badge-emerald">
                   <span className="pulse-dot" />
                   ĐANG TRONG BUỔI TẬP
                 </span>
@@ -224,8 +224,8 @@ export default function WorkoutPage() {
                 <span className="badge badge-cyan">SẴN SÀNG TẬP LUYỆN</span>
               )}
               <span className="badge badge-purple">
-                <Calendar size={13} />
-                {currentSelectedDay?.name}
+                <Calendar size={12} />
+                <span>{currentSelectedDay?.name}</span>
               </span>
             </div>
             <h1>
@@ -240,16 +240,16 @@ export default function WorkoutPage() {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
             {activeSession ? (
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.5px' }}>
                   Thời Gian Đã Tập
                 </div>
-                <div style={{ fontSize: 36, fontWeight: 800, fontFamily: 'JetBrains Mono', color: '#10B981', lineHeight: 1.1 }}>
+                <div style={{ fontSize: 36, fontWeight: 800, fontFamily: 'JetBrains Mono', color: '#34D399', lineHeight: 1.1, margin: '4px 0' }}>
                   {formatDuration(elapsedSeconds)}
                 </div>
                 <button
                   onClick={handleFinishSession}
                   className="btn btn-danger"
-                  style={{ marginTop: 10, padding: '10px 20px' }}
+                  style={{ marginTop: 8, padding: '10px 22px' }}
                 >
                   <Square size={16} fill="currentColor" />
                   <span>KẾT THÚC BUỔI TẬP</span>
@@ -259,9 +259,9 @@ export default function WorkoutPage() {
               <button
                 onClick={handleStartSession}
                 className="btn btn-primary"
-                style={{ padding: '14px 28px', fontSize: 16 }}
+                style={{ padding: '12px 26px', fontSize: 15 }}
               >
-                <Play size={18} fill="currentColor" />
+                <Play size={17} fill="currentColor" />
                 <span>BẮT ĐẦU BUỔI TẬP</span>
               </button>
             )}
@@ -270,15 +270,16 @@ export default function WorkoutPage() {
 
         {/* Day Selector (when no active session) */}
         {!activeSession && (
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
+          <div className="tab-group" style={{ marginTop: 14 }}>
             {allDays.map((d) => (
               <button
                 key={d.id}
                 onClick={() => setSelectedDayId(d.id)}
                 className={`tab-btn ${selectedDayId === d.id ? 'active' : ''}`}
-                style={{ padding: '8px 16px', minWidth: 110, fontSize: 13 }}
+                type="button"
               >
-                T{d.dayOfWeek + 1 === 7 ? '7' : d.dayOfWeek + 1}: {d.name.split('(')[0]}
+                <strong>T{d.dayOfWeek + 1 === 7 ? '7' : d.dayOfWeek + 1}:</strong>
+                <span>{d.name.split('(')[0].trim()}</span>
               </button>
             ))}
           </div>
@@ -296,7 +297,7 @@ export default function WorkoutPage() {
                 style={{
                   height: '100%',
                   width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #06B6D4, #10B981)',
+                  background: 'linear-gradient(90deg, #0284C7, #10B981)',
                   transition: 'width 0.3s ease',
                 }}
               />
@@ -313,7 +314,7 @@ export default function WorkoutPage() {
             <div className="day-name">Chi Tiết Từng Bài & Ghi Nhận Mức Tạ</div>
           </div>
           <span className="badge badge-cyan">
-            <Clock size={13} />
+            <Clock size={12} />
             Mục tiêu: {currentSelectedDay?.durationMin || 45} phút
           </span>
         </div>
@@ -349,19 +350,11 @@ export default function WorkoutPage() {
                       <button
                         onClick={() => handleToggleExercise(ex.id, isDone)}
                         disabled={!activeSession}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: activeSession ? 'pointer' : 'not-allowed',
-                          color: isDone ? '#10B981' : 'var(--text-dim)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: 4,
-                        }}
+                        className={`checkbox-custom-btn ${isDone ? 'checked' : ''}`}
                         title={activeSession ? 'Đánh dấu hoàn thành' : 'Bấm Bắt đầu buổi tập trước'}
+                        type="button"
                       >
-                        {isDone ? <CheckSquare size={24} color="#10B981" /> : <UncheckedSquare size={24} />}
+                        {isDone ? <CheckSquare size={22} color="#10B981" /> : <UncheckedSquare size={22} />}
                       </button>
                     </td>
 

@@ -111,13 +111,13 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Exercise Selector Pills */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
+        <div className="tab-group" style={{ marginTop: 14 }}>
           {progressions.map((p) => (
             <button
               key={p.exerciseName}
               onClick={() => setSelectedExName(p.exerciseName)}
               className={`tab-btn ${selectedExName === p.exerciseName ? 'active' : ''}`}
-              style={{ minWidth: 140, padding: '8px 16px', fontSize: 13 }}
+              type="button"
             >
               {p.exerciseName}
             </button>

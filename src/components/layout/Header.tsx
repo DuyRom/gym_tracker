@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Dumbbell,
   LayoutDashboard,
@@ -18,6 +18,7 @@ import {
   Key,
   Shield,
   Menu,
+  ChevronDown,
 } from 'lucide-react';
 import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 import MobileDrawer from '@/components/layout/MobileDrawer';
@@ -28,6 +29,8 @@ export default function Header() {
   const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string; role?: string } | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -40,7 +43,33 @@ export default function Header() {
       .catch(() => {});
   }, []);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDropdownOpen]);
+
   const handleLogout = async () => {
+    setIsDropdownOpen(false);
     await fetch('/api/auth/logout', { method: 'POST' });
     setCurrentUser(null);
     router.push('/login');
@@ -50,7 +79,7 @@ export default function Header() {
   const navLinks = [
     { href: '/', label: 'Tổng Quan', icon: LayoutDashboard },
     { href: '/workout', label: 'Tập Luyện', icon: PlayCircle },
-    { href: '/schedule', label: 'Lịch Tập 5 Ngày', icon: Calendar },
+    { href: '/schedule', label: 'Lịch Tập', icon: Calendar },
     { href: '/history', label: 'Lịch Sử', icon: History },
     { href: '/analytics', label: 'Phân Tích', icon: LineChart },
     { href: '/gallery', label: 'Thư Viện 3D', icon: ImageIcon },
@@ -66,26 +95,14 @@ export default function Header() {
     <>
       <header className="app-header">
         <div className="app-header-inner">
-          <Link href="/" className="brand-logo">
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 15px rgba(6, 182, 212, 0.4)',
-              }}
-            >
+          <Link href="/" className="brand-logo" aria-label="Gym Tracker Trang Chủ">
+            <div className="brand-icon-box">
               <Dumbbell size={20} color="#fff" />
             </div>
             <span>Gym Tracker</span>
-            <span className="brand-badge">PRO</span>
           </Link>
 
-          <nav className="header-nav">
+          <nav className="header-nav" aria-label="Menu chính">
             {navLinks.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -95,7 +112,7 @@ export default function Header() {
                   href={item.href}
                   className={`header-link ${isActive ? 'active' : ''}`}
                 >
-                  <Icon size={16} />
+                  <Icon size={15} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -105,48 +122,88 @@ export default function Header() {
           <div className="header-actions">
             <div className="header-user">
               {currentUser ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div className="user-badge">
+                <div className="profile-dropdown-container" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="profile-trigger-btn"
+                    aria-expanded={isDropdownOpen}
+                    aria-haspopup="true"
+                    title="Menu tài khoản"
+                  >
                     <div
                       className="user-avatar"
                       style={{
                         background:
                           currentUser.role === 'ADMIN'
                             ? 'linear-gradient(135deg, #8B5CF6, #EC4899)'
-                            : 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+                            : 'linear-gradient(135deg, #0284C7, #3B82F6)',
                       }}
                     >
                       {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    <span className="user-badge-name" style={{ fontWeight: 600 }}>{currentUser.name || 'User'}</span>
+                    <span style={{ fontWeight: 600, fontSize: 13, color: '#F1F5F9' }}>
+                      {currentUser.name || 'User'}
+                    </span>
                     {currentUser.role === 'ADMIN' && (
-                      <span style={{ fontSize: 10, color: '#C4B5FD', background: 'rgba(139, 92, 246, 0.25)', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>
-                        ADMIN
-                      </span>
+                      <span className="badge-admin">ADMIN</span>
                     )}
-                  </div>
-
-                  <button
-                    onClick={() => setIsPasswordModalOpen(true)}
-                    className="btn btn-secondary header-user-action-btn"
-                    style={{ padding: '6px 10px', fontSize: 12 }}
-                    title="Đổi mật khẩu tài khoản của bạn"
-                  >
-                    <Key size={14} />
-                    <span style={{ display: 'none' }}>Đổi MK</span>
+                    <ChevronDown size={14} className="profile-trigger-chevron" />
                   </button>
 
-                  <button
-                    onClick={handleLogout}
-                    className="btn btn-secondary header-user-action-btn"
-                    style={{ padding: '6px 10px', fontSize: 12 }}
-                    title="Đăng xuất"
-                  >
-                    <LogOut size={14} />
-                  </button>
+                  {/* Glassmorphism Profile Dropdown */}
+                  {isDropdownOpen && (
+                    <div className="profile-dropdown-menu" role="menu">
+                      <div className="dropdown-user-header">
+                        <div className="dropdown-user-name">
+                          <span>{currentUser.name || 'Người dùng'}</span>
+                          {currentUser.role === 'ADMIN' && (
+                            <span className="badge-admin">ADMIN</span>
+                          )}
+                        </div>
+                        {currentUser.email && (
+                          <div className="dropdown-user-email">{currentUser.email}</div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          setIsPasswordModalOpen(true);
+                        }}
+                        className="dropdown-item"
+                        role="menuitem"
+                      >
+                        <Key size={15} color="#38BDF8" />
+                        <span>Đổi Mật Khẩu</span>
+                      </button>
+
+                      {currentUser.role === 'ADMIN' && (
+                        <Link
+                          href="/users"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="dropdown-item"
+                          role="menuitem"
+                        >
+                          <Users size={15} color="#C4B5FD" />
+                          <span>Quản Lý Thành Viên</span>
+                        </Link>
+                      )}
+
+                      <div className="dropdown-divider" />
+
+                      <button
+                        onClick={handleLogout}
+                        className="dropdown-item danger"
+                        role="menuitem"
+                      >
+                        <LogOut size={15} />
+                        <span>Đăng Xuất</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <Link href="/login" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <Link href="/login" className="btn btn-primary" style={{ padding: '7px 16px', fontSize: 13 }}>
                   <User size={14} />
                   <span>Đăng nhập</span>
                 </Link>

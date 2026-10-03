@@ -65,23 +65,23 @@ export default function DashboardPage() {
 
         {/* 4 Stat Cards */}
         <div className="stat-grid">
-          <div className="stat-box" style={{ borderLeft: '4px solid #06B6D4' }}>
+          <div className="stat-box" style={{ borderLeft: '3px solid #38BDF8' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="stat-label">Tổng Buổi Tập</span>
-              <Dumbbell size={16} color="#06B6D4" />
+              <Dumbbell size={16} color="#38BDF8" />
             </div>
-            <div className="stat-val" style={{ color: '#06B6D4' }}>
+            <div className="stat-val" style={{ color: '#38BDF8' }}>
               {overview.totalSessions} <small>buổi</small>
             </div>
             <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Đã ghi nhận trong hệ thống</span>
           </div>
 
-          <div className="stat-box" style={{ borderLeft: '4px solid #10B981' }}>
+          <div className="stat-box" style={{ borderLeft: '3px solid #34D399' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="stat-label">Tổng Thời Gian</span>
-              <Clock size={16} color="#10B981" />
+              <Clock size={16} color="#34D399" />
             </div>
-            <div className="stat-val" style={{ color: '#10B981' }}>
+            <div className="stat-val" style={{ color: '#34D399' }}>
               {overview.totalDurationMin} <small>phút</small>
             </div>
             <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>
@@ -89,23 +89,23 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="stat-box" style={{ borderLeft: '4px solid #F59E0B' }}>
+          <div className="stat-box" style={{ borderLeft: '3px solid #F59E0B' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="stat-label">Chuỗi Tập (Streak)</span>
               <Flame size={16} color="#F59E0B" />
             </div>
-            <div className="stat-val" style={{ color: '#F59E0B' }}>
+            <div className="stat-val" style={{ color: '#FCD34D' }}>
               {overview.currentStreakDays} <small>ngày 🔥</small>
             </div>
             <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Duy trì không bỏ lỡ</span>
           </div>
 
-          <div className="stat-box" style={{ borderLeft: '4px solid #8B5CF6' }}>
+          <div className="stat-box" style={{ borderLeft: '3px solid #A855F7' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="stat-label">Tỷ Lệ Hoàn Thành</span>
-              <Award size={16} color="#8B5CF6" />
+              <Award size={16} color="#A855F7" />
             </div>
-            <div className="stat-val" style={{ color: '#8B5CF6' }}>
+            <div className="stat-val" style={{ color: '#C4B5FD' }}>
               {overview.completionRate} <small>%</small>
             </div>
             <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>
