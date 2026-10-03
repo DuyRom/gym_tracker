@@ -18,7 +18,6 @@ import {
   Key,
   Shield,
   Menu,
-  ChevronDown,
 } from 'lucide-react';
 import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 import MobileDrawer from '@/components/layout/MobileDrawer';
@@ -125,44 +124,59 @@ export default function Header() {
                 <div className="profile-dropdown-container" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="profile-trigger-btn"
+                    className="header-avatar-btn"
                     aria-expanded={isDropdownOpen}
                     aria-haspopup="true"
-                    title="Menu tài khoản"
+                    title={currentUser.name ? `${currentUser.name} (${currentUser.role || 'Thành viên'})` : 'Menu tài khoản'}
                   >
                     <div
-                      className="user-avatar"
+                      className="header-avatar"
                       style={{
                         background:
                           currentUser.role === 'ADMIN'
                             ? 'linear-gradient(135deg, #8B5CF6, #EC4899)'
-                            : 'linear-gradient(135deg, #0284C7, #3B82F6)',
+                            : 'linear-gradient(135deg, #0284C7, #38BDF8)',
                       }}
                     >
                       {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    <span style={{ fontWeight: 600, fontSize: 13, color: '#F1F5F9' }}>
-                      {currentUser.name || 'User'}
-                    </span>
-                    {currentUser.role === 'ADMIN' && (
-                      <span className="badge-admin">ADMIN</span>
-                    )}
-                    <ChevronDown size={14} className="profile-trigger-chevron" />
                   </button>
 
                   {/* Glassmorphism Profile Dropdown */}
                   {isDropdownOpen && (
                     <div className="profile-dropdown-menu" role="menu">
                       <div className="dropdown-user-header">
-                        <div className="dropdown-user-name">
-                          <span>{currentUser.name || 'Người dùng'}</span>
-                          {currentUser.role === 'ADMIN' && (
-                            <span className="badge-admin">ADMIN</span>
-                          )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div
+                            className="header-avatar"
+                            style={{
+                              width: 36,
+                              height: 36,
+                              fontSize: 14,
+                              background:
+                                currentUser.role === 'ADMIN'
+                                  ? 'linear-gradient(135deg, #8B5CF6, #EC4899)'
+                                  : 'linear-gradient(135deg, #0284C7, #38BDF8)',
+                            }}
+                          >
+                            {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontWeight: 700, fontSize: 13, color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {currentUser.name || 'Người dùng'}
+                              </span>
+                              {currentUser.role === 'ADMIN' && (
+                                <span className="badge-admin">ADMIN</span>
+                              )}
+                            </div>
+                            {currentUser.email && (
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                                {currentUser.email}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {currentUser.email && (
-                          <div className="dropdown-user-email">{currentUser.email}</div>
-                        )}
                       </div>
 
                       <button

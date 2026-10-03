@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dumbbell, Lock, Mail, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
+import { Dumbbell, Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,11 +37,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleFillDemo = () => {
-    setEmail('duyrnt09@gmail.com');
-    setPassword('Odinbi@123#');
-  };
-
   return (
     <main className="container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="day-card" style={{ maxWidth: 440, width: '100%', padding: '36px 32px' }}>
@@ -51,12 +46,12 @@ export default function LoginPage() {
               width: 56,
               height: 56,
               borderRadius: 16,
-              background: 'linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%)',
+              background: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
-              boxShadow: '0 0 25px rgba(6, 182, 212, 0.4)',
+              boxShadow: '0 0 25px rgba(2, 132, 199, 0.4)',
             }}
           >
             <Dumbbell size={28} color="#fff" />
@@ -122,26 +117,6 @@ export default function LoginPage() {
             {!loading && <ArrowRight size={16} />}
           </button>
         </form>
-
-        {/* Demo Quick Login Button */}
-        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <button
-            type="button"
-            onClick={handleFillDemo}
-            className="btn btn-secondary"
-            style={{ width: '100%', fontSize: 12, padding: '10px 12px', justifyContent: 'center', borderColor: 'rgba(6, 182, 212, 0.35)' }}
-          >
-            <Sparkles size={14} color="#67E8F9" />
-            <span>Điền tài khoản Admin mặc định</span>
-          </button>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 18, fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--text-muted)' }}>
-            <ShieldCheck size={14} color="#10B981" />
-            <span>Tài khoản do Quản Trị Viên (Admin) khởi tạo</span>
-          </div>
-        </div>
       </div>
     </main>
   );
