@@ -22,3 +22,41 @@ export async function PATCH(
     return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500 });
   }
 }
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUserOrDemo();
+    if (!user) {
+      return NextResponse.json({ error: 'Chưa đăng nhập' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await req.json();
+
+    const updated = await SessionService.updateSession(id, user.id, body);
+    return NextResponse.json({ success: true, session: updated });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUserOrDemo();
+    if (!user) {
+      return NextResponse.json({ error: 'Chưa đăng nhập' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    await SessionService.deleteSession(id, user.id);
+    return NextResponse.json({ success: true, message: 'Đã xóa buổi tập thành công' });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500 });
+  }
+}

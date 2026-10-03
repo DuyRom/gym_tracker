@@ -394,67 +394,8 @@ async function main() {
     }
   }
 
-  // 4. Seed some sample historical sessions for demonstration and charts
-  const countSessions = await prisma.workoutSession.count({
-    where: { userId: user.id },
-  });
-
-  if (countSessions === 0) {
-    console.log('📊 Seeding demo workout sessions for charts...');
-    const now = new Date();
-    const allDays = await prisma.workoutDay.findMany({ include: { exercises: true } });
-
-    // Seed past 14 days with some workouts
-    for (let i = 14; i >= 1; i--) {
-      const pastDate = new Date();
-      pastDate.setDate(now.getDate() - i);
-      const dayOfWeek = pastDate.getDay(); // 0 is Sun, 1 is Mon...
-
-      // Skip Sundays and Saturdays
-      if (dayOfWeek === 0 || dayOfWeek === 6) continue;
-
-      const matchingDay = allDays.find(d => d.dayOfWeek === dayOfWeek);
-      if (!matchingDay) continue;
-
-      // 85% chance of completing, 15% missed
-      const isCompleted = i !== 5; // e.g. missed day 5
-      const duration = isCompleted ? (matchingDay.durationMin + Math.floor(Math.random() * 8) - 3) : 0;
-      const started = new Date(pastDate);
-      started.setHours(17, 0, 0, 0);
-      const ended = new Date(pastDate);
-      ended.setHours(17, duration, 0, 0);
-
-      const session = await prisma.workoutSession.create({
-        data: {
-          userId: user.id,
-          workoutDayId: matchingDay.id,
-          date: pastDate,
-          startedAt: started,
-          endedAt: ended,
-          durationMin: duration,
-          status: isCompleted ? 'COMPLETED' : 'MISSED',
-          notes: isCompleted ? 'Buổi tập tốt, duy trì form chuẩn RIR 1-2.' : 'Bận họp OT đột xuất.',
-        },
-      });
-
-      if (isCompleted) {
-        for (const ex of matchingDay.exercises) {
-          await prisma.sessionExercise.create({
-            data: {
-              sessionId: session.id,
-              exerciseId: ex.id,
-              completed: true,
-              actualSets: ex.sets,
-              actualReps: `${ex.repsMin}, ${ex.repsMin}, ${ex.repsMin}`,
-              actualWeightKg: ex.nameVi.includes('Đẩy Ngực') ? 14 + Math.floor((14 - i) / 3) : 10,
-              notes: 'Tập đúng kỹ thuật',
-            },
-          });
-        }
-      }
-    }
-    console.log('✅ Demo workout sessions seeded successfully!');
-  }
+  // 4. Seeding completed without demo sessions (clean start for real user workouts)
+  console.log('🎉 Seeding completed successfully (Clean workout history)!');
 
   console.log('🎉 Seeding completed successfully!');
 }

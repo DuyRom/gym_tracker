@@ -172,4 +172,99 @@ export class SessionService {
       },
     });
   }
+
+  /**
+   * Delete a session by ID
+   */
+  static async deleteSession(sessionId: string, userId: string) {
+    const session = await prisma.workoutSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+
+    if (!session) {
+      throw new Error('Không tìm thấy buổi tập hoặc bạn không có quyền xóa');
+    }
+
+    await prisma.sessionExercise.deleteMany({
+      where: { sessionId },
+    });
+
+    return prisma.workoutSession.delete({
+      where: { id: sessionId },
+    });
+  }
+
+  /**
+   * Update a session (date, duration, status, notes, exercise logs)
+   */
+  static async updateSession(
+    sessionId: string,
+    userId: string,
+    data: {
+      notes?: string;
+      durationMin?: number;
+      status?: string;
+      date?: string | Date;
+      exercises?: Array<{
+        id: string;
+        actualWeightKg?: number | null;
+        actualSets?: number | null;
+        actualReps?: string | null;
+        completed?: boolean;
+      }>;
+    }
+  ) {
+    const session = await prisma.workoutSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+
+    if (!session) {
+      throw new Error('Không tìm thấy buổi tập hoặc bạn không có quyền sửa');
+    }
+
+    const updateData: any = {};
+    if (data.notes !== undefined) updateData.notes = data.notes;
+    if (data.durationMin !== undefined) updateData.durationMin = Number(data.durationMin);
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.date !== undefined) updateData.date = new Date(data.date);
+
+    const updated = await prisma.workoutSession.update({
+      where: { id: sessionId },
+      data: updateData,
+    });
+
+    if (data.exercises && Array.isArray(data.exercises)) {
+      for (const ex of data.exercises) {
+        if (!ex.id) continue;
+        await prisma.sessionExercise.update({
+          where: { id: ex.id },
+          data: {
+            actualWeightKg: ex.actualWeightKg !== undefined ? (ex.actualWeightKg === null ? null : Number(ex.actualWeightKg)) : undefined,
+            actualSets: ex.actualSets !== undefined ? (ex.actualSets === null ? null : Number(ex.actualSets)) : undefined,
+            actualReps: ex.actualReps !== undefined ? ex.actualReps : undefined,
+            completed: ex.completed !== undefined ? Boolean(ex.completed) : undefined,
+          },
+        });
+      }
+    }
+
+    return updated;
+  }
+
+  /**
+   * Reset / clear all sessions for user back to clean state
+   */
+  static async resetAllSessions(userId: string) {
+    await prisma.sessionExercise.deleteMany({
+      where: {
+        session: {
+          userId,
+        },
+      },
+    });
+
+    return prisma.workoutSession.deleteMany({
+      where: { userId },
+    });
+  }
 }

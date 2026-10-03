@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Users, UserPlus, Shield, Trash2, Key, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { formatDateVi } from '@/lib/utils';
 
 interface UserItem {
@@ -21,6 +22,8 @@ export default function UserManagementPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
+  const [deletingUser, setDeletingUser] = useState<boolean>(false);
 
   // New user form state
   const [newEmail, setNewEmail] = useState('');
@@ -87,23 +90,30 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleDeleteUser = async (user: UserItem) => {
-    const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa người dùng: ${user.email} không?`);
-    if (!confirmDelete) return;
+  const handleDeleteUser = (user: UserItem) => {
+    setUserToDelete(user);
+  };
+
+  const executeDeleteUser = async () => {
+    if (!userToDelete) return;
+    setDeletingUser(true);
 
     try {
       setError('');
       setSuccessMsg('');
-      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/users/${userToDelete.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok || data.error) {
         setError(data.error || 'Lỗi khi xóa người dùng');
       } else {
-        setSuccessMsg(`Đã xóa người dùng ${user.email} thành công!`);
+        setSuccessMsg(`Đã xóa người dùng ${userToDelete.email} thành công!`);
+        setUserToDelete(null);
         loadUsers();
       }
     } catch {
       setError('Lỗi kết nối khi xóa người dùng');
+    } finally {
+      setDeletingUser(false);
     }
   };
 
@@ -439,6 +449,29 @@ export default function UserManagementPage() {
           </div>
         </div>
       )}
+
+      {/* Modern Confirm Dialog for Deleting User */}
+      <ConfirmDialog
+        isOpen={Boolean(userToDelete)}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={executeDeleteUser}
+        loading={deletingUser}
+        title="Xác Nhận Xóa Thành Viên"
+        message={
+          userToDelete ? (
+            <div>
+              Bạn có chắc chắn muốn xóa tài khoản <strong>{userToDelete.email}</strong> ({userToDelete.name}) không?
+              <div style={{ marginTop: 6, color: '#FDA4AF', fontSize: 12 }}>
+                ⚠️ Toàn bộ dữ liệu và lịch sử của người dùng này sẽ bị xóa hoàn toàn.
+              </div>
+            </div>
+          ) : ''
+        }
+        confirmText="Xóa thành viên"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        icon={<Trash2 size={22} />}
+      />
     </main>
   );
 }

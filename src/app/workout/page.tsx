@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Play, Square, CheckSquare, Square as UncheckedSquare, Dumbbell, Clock, Video, Info, Award, Calendar } from 'lucide-react';
 import CompletionModal from '@/components/workout/CompletionModal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { WorkoutDayItem, WorkoutSessionItem } from '@/types/workout';
 import { formatDuration } from '@/lib/utils';
 
@@ -14,6 +15,8 @@ export default function WorkoutPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [sessionNotes, setSessionNotes] = useState<string>('');
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
+  const [finishing, setFinishing] = useState<boolean>(false);
   const [completedSummary, setCompletedSummary] = useState({
     durationMin: 0,
     completedCount: 0,
@@ -154,11 +157,15 @@ export default function WorkoutPage() {
     }
   };
 
-  // 5. Finish Session
-  const handleFinishSession = async () => {
+  // 5. Finish Session trigger
+  const handleFinishSession = () => {
     if (!activeSession) return;
-    const confirmStop = window.confirm('Bạn có chắc chắn muốn kết thúc buổi tập này không?');
-    if (!confirmStop) return;
+    setShowFinishConfirm(true);
+  };
+
+  const executeFinishSession = async () => {
+    if (!activeSession) return;
+    setFinishing(true);
 
     try {
       const res = await fetch(`/api/sessions/${activeSession.id}`, {
@@ -177,10 +184,13 @@ export default function WorkoutPage() {
           dayName: activeSession.workoutDay.name,
         });
         setActiveSession(null);
+        setShowFinishConfirm(false);
         setShowCompletionModal(true);
       }
     } catch (err) {
       console.error('Failed to finish session:', err);
+    } finally {
+      setFinishing(false);
     }
   };
 
@@ -446,6 +456,20 @@ export default function WorkoutPage() {
         isOpen={showCompletionModal}
         onClose={() => setShowCompletionModal(false)}
         sessionData={completedSummary}
+      />
+
+      {/* Modern Confirm Dialog for Finishing Session */}
+      <ConfirmDialog
+        isOpen={showFinishConfirm}
+        onClose={() => setShowFinishConfirm(false)}
+        onConfirm={executeFinishSession}
+        loading={finishing}
+        title="Kết Thúc Buổi Tập"
+        message="Bạn có chắc chắn muốn kết thúc buổi tập này không? Tiến độ các bài tập và mức tạ đã ghi nhận sẽ được lưu vào lịch sử."
+        confirmText="Hoàn thành buổi tập"
+        cancelText="Tiếp tục tập"
+        variant="primary"
+        icon={<Clock size={24} />}
       />
     </main>
   );

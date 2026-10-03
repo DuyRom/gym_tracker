@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Dumbbell, Clock, Flame, Award, ArrowRight, Play, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
+import { Dumbbell, Clock, Flame, Award, ArrowRight, Play, Calendar, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
 import DurationLineChart from '@/components/charts/DurationLineChart';
 import CompletionDonutChart from '@/components/charts/CompletionDonutChart';
 import CalendarHeatmap from '@/components/charts/CalendarHeatmap';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { DashboardStatsResponse } from '@/types/stats';
 import { formatDateVi } from '@/lib/utils';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
+  const [resetting, setResetting] = useState<boolean>(false);
 
-  useEffect(() => {
+  const loadStats = () => {
     fetch('/api/stats')
       .then((res) => res.json())
       .then((data) => {
@@ -24,7 +27,28 @@ export default function DashboardPage() {
       })
       .catch((err) => console.error('Failed to load stats:', err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadStats();
   }, []);
+
+  const handleResetAll = async () => {
+    setResetting(true);
+    try {
+      const res = await fetch('/api/sessions/reset', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Reset thất bại');
+      }
+      setShowResetConfirm(false);
+      loadStats();
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi reset');
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const overview = stats?.overview || {
     totalSessions: 0,
@@ -182,10 +206,30 @@ export default function DashboardPage() {
               <div className="day-focus">Xem chi tiết thời gian và trạng thái buổi tập</div>
             </div>
           </div>
-          <Link href="/history" className="btn btn-secondary" style={{ fontSize: 13, padding: '6px 12px' }}>
-            <span>Xem tất cả</span>
-            <ArrowRight size={14} />
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {overview.totalSessions > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(true)}
+                className="btn btn-secondary"
+                style={{
+                  color: '#FB7185',
+                  borderColor: 'rgba(244, 63, 94, 0.35)',
+                  background: 'rgba(244, 63, 94, 0.08)',
+                  fontSize: 12,
+                  padding: '6px 12px',
+                }}
+                title="Xóa toàn bộ dữ liệu test để bắt đầu tập thật"
+              >
+                <RotateCcw size={13} />
+                <span>Reset Dữ Liệu</span>
+              </button>
+            )}
+            <Link href="/history" className="btn btn-secondary" style={{ fontSize: 13, padding: '6px 12px' }}>
+              <span>Xem tất cả</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
 
         <div className="table-responsive">
@@ -256,6 +300,27 @@ export default function DashboardPage() {
           </table>
         </div>
       </section>
+
+      {/* Modern Confirm Dialog for Resetting Data */}
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleResetAll}
+        loading={resetting}
+        title="Reset Toàn Bộ Dữ Liệu Tập Luyện"
+        message={
+          <div>
+            Bạn có chắc chắn muốn <strong>xóa toàn bộ lịch sử các buổi tập</strong> và đưa tất cả chỉ số (tổng buổi tập, thời lượng, chuỗi streak) về <strong>0</strong> không?
+            <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)', borderRadius: 8, color: '#FDA4AF', fontSize: 12 }}>
+              💡 Thao tác này sẽ xóa sạch dữ liệu test để bạn bắt đầu ghi nhật ký buổi tập thật với số liệu chính xác 100%.
+            </div>
+          </div>
+        }
+        confirmText="Xác nhận Reset Về 0"
+        cancelText="Hủy bỏ"
+        variant="danger"
+        icon={<RotateCcw size={22} />}
+      />
     </main>
   );
 }
