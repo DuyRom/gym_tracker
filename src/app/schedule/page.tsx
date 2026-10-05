@@ -279,7 +279,7 @@ export default function SchedulePage() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="hero-actions-group">
             <button
               type="button"
               className="btn btn-secondary"
@@ -301,7 +301,7 @@ export default function SchedulePage() {
               <span>Khôi Phục Mặc Định</span>
             </button>
 
-            <Link href="/workout" className="btn btn-primary" style={{ padding: '10px 18px' }}>
+            <Link href="/workout" className="btn btn-primary btn-cta-full" style={{ padding: '10px 18px' }}>
               <Play size={15} fill="currentColor" />
               <span>Vào Phòng Tập Ngay</span>
             </Link>
@@ -311,16 +311,16 @@ export default function SchedulePage() {
         {/* Tab Selector (Supports Drag and Drop target tabs!) */}
         <div className="tab-group" style={{ marginBottom: 0 }}>
           {days.map((d) => {
-            const dayLabels = [
-              'Thứ 2 (Upper A)',
-              'Thứ 3 (Lower A)',
-              'Thứ 4 (Active Recovery)',
-              'Thứ 5 (Upper B)',
-              'Thứ 6 (Lower B)',
-              'Thứ 7',
-              'Chủ Nhật',
-            ];
-            const label = dayLabels[d.dayOfWeek - 1] || `Thứ ${d.dayOfWeek + 1}`;
+            const dayMeta: Record<number, { full: string; mobile: string }> = {
+              1: { full: 'Thứ 2 (Upper A)', mobile: 'T2 • Upper A' },
+              2: { full: 'Thứ 3 (Lower A)', mobile: 'T3 • Lower A' },
+              3: { full: 'Thứ 4 (Phục Hồi)', mobile: 'T4 • Nghỉ' },
+              4: { full: 'Thứ 5 (Upper B)', mobile: 'T5 • Upper B' },
+              5: { full: 'Thứ 6 (Lower B)', mobile: 'T6 • Lower B' },
+              6: { full: 'Thứ 7 (Nghỉ)', mobile: 'T7 • Nghỉ' },
+              7: { full: 'Chủ Nhật (Nghỉ)', mobile: 'CN • Nghỉ' },
+            };
+            const meta = dayMeta[d.dayOfWeek] || { full: `Thứ ${d.dayOfWeek + 1}`, mobile: `T${d.dayOfWeek + 1}` };
             const isTabDragOver = dragOverDayTab === d.dayOfWeek;
 
             return (
@@ -333,6 +333,7 @@ export default function SchedulePage() {
                   background: isTabDragOver ? 'rgba(14, 165, 233, 0.25)' : undefined,
                   transform: isTabDragOver ? 'scale(1.05)' : undefined,
                   transition: 'all 0.15s ease',
+                  flexShrink: 0,
                 }}
                 onClick={() => setActiveTab(d.dayOfWeek)}
                 onDragOver={(e) => {
@@ -345,7 +346,8 @@ export default function SchedulePage() {
                 onDrop={(e) => handleDropOnTab(e, d.dayOfWeek)}
                 type="button"
               >
-                <span>{label}</span>
+                <span className="tab-label-desktop">{meta.full}</span>
+                <span className="tab-label-mobile">{meta.mobile}</span>
                 <span
                   style={{
                     marginLeft: 6,
@@ -367,7 +369,7 @@ export default function SchedulePage() {
       {currentDay && (
         <section className="day-card" style={{ marginTop: 24 }}>
           {/* Day Header & Actions */}
-          <div className="day-header" style={{ flexWrap: 'wrap', gap: 12 }}>
+          <div className="day-header">
             <div className="day-title">
               <span
                 className="day-tag"
@@ -391,7 +393,7 @@ export default function SchedulePage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="day-header-actions">
               <span className="badge badge-emerald">
                 <Clock size={13} />
                 ⏱️ {currentDay.durationMin} phút
@@ -429,7 +431,7 @@ export default function SchedulePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Info size={14} color="#38BDF8" />
               <span>
-                💡 <strong>Mẹo tùy biến:</strong> Giữ chuột vào thanh ⋮⋮ để kéo thả đổi thứ tự bài tập, hoặc kéo thả thẳng vào Tab Thứ khác để chuyển ngày!
+                💡 <strong>Mẹo:</strong> Kéo thả ⋮⋮ để đổi thứ tự bài tập, hoặc kéo thả vào Tab Thứ khác để đổi lịch!
               </span>
             </div>
             <span style={{ color: '#38BDF8', fontWeight: 600 }}>
@@ -451,12 +453,8 @@ export default function SchedulePage() {
                   onDragOver={(e) => handleDragOverCard(e, ex.id)}
                   onDragLeave={() => setDragOverExerciseId(null)}
                   onDrop={(e) => handleDropOnCard(e, ex.id)}
+                  className="schedule-exercise-card"
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '14px 16px',
-                    borderRadius: 12,
                     background: isDraggingThis
                       ? 'rgba(14, 165, 233, 0.12)'
                       : isDragOverThis
@@ -470,12 +468,10 @@ export default function SchedulePage() {
                       : 'var(--card-border)',
                     boxShadow: isDragOverThis ? '0 0 16px rgba(14, 165, 233, 0.3)' : 'none',
                     opacity: isDraggingThis ? 0.6 : 1,
-                    transition: 'all 0.15s ease',
-                    gap: 12,
                   }}
                 >
                   {/* Left: Drag handle + STT + Info */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                  <div className="schedule-exercise-left">
                     {/* Drag Handle */}
                     <div
                       style={{
@@ -483,7 +479,8 @@ export default function SchedulePage() {
                         color: 'var(--text-muted)',
                         display: 'flex',
                         alignItems: 'center',
-                        padding: 4,
+                        padding: '4px 2px',
+                        flexShrink: 0,
                       }}
                       title="Kéo thả bài tập"
                     >
@@ -496,8 +493,9 @@ export default function SchedulePage() {
                         fontSize: 13,
                         fontWeight: 700,
                         color: '#64748B',
-                        width: 24,
+                        width: 22,
                         textAlign: 'center',
+                        flexShrink: 0,
                       }}
                     >
                       {String(idx + 1).padStart(2, '0')}
@@ -519,7 +517,7 @@ export default function SchedulePage() {
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-muted)', marginTop: 4, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 10, fontSize: 12, color: 'var(--text-muted)', marginTop: 4, flexWrap: 'wrap' }}>
                         <span>
                           ⚙️ <strong style={{ color: '#E2E8F0' }}>{ex.equipment}</strong>
                         </span>
@@ -527,7 +525,7 @@ export default function SchedulePage() {
                           🎯 <strong style={{ color: '#38BDF8' }}>{ex.sets} hiệp x {ex.repsMin}–{ex.repsMax} reps</strong>
                         </span>
                         {ex.techniqueNote && (
-                          <span style={{ maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.techniqueNote}>
+                          <span style={{ color: 'var(--text-dim)', fontSize: 11 }} title={ex.techniqueNote}>
                             📝 {ex.techniqueNote}
                           </span>
                         )}
@@ -535,22 +533,15 @@ export default function SchedulePage() {
                     </div>
                   </div>
 
-                  {/* Right Actions: Reorder + Move + Edit + Delete + Video */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* Right Actions Toolbar */}
+                  <div className="schedule-exercise-actions">
                     {/* Up / Down buttons */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ display: 'flex', gap: 2 }}>
                       <button
                         type="button"
                         onClick={() => handleMoveUp(idx)}
                         disabled={idx === 0}
-                        style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          border: 'none',
-                          borderRadius: 4,
-                          padding: 2,
-                          color: idx === 0 ? 'rgba(255,255,255,0.1)' : '#94A3B8',
-                          cursor: idx === 0 ? 'not-allowed' : 'pointer',
-                        }}
+                        className="btn-icon-subtle"
                         title="Di chuyển lên"
                       >
                         <ChevronUp size={13} />
@@ -559,14 +550,7 @@ export default function SchedulePage() {
                         type="button"
                         onClick={() => handleMoveDown(idx)}
                         disabled={idx === currentDay.exercises.length - 1}
-                        style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          border: 'none',
-                          borderRadius: 4,
-                          padding: 2,
-                          color: idx === currentDay.exercises.length - 1 ? 'rgba(255,255,255,0.1)' : '#94A3B8',
-                          cursor: idx === currentDay.exercises.length - 1 ? 'not-allowed' : 'pointer',
-                        }}
+                        className="btn-icon-subtle"
                         title="Di chuyển xuống"
                       >
                         <ChevronDown size={13} />
@@ -580,11 +564,11 @@ export default function SchedulePage() {
                         target="_blank"
                         rel="noreferrer"
                         className="btn-link-action"
-                        style={{ padding: '6px 8px', fontSize: 11 }}
+                        style={{ padding: '6px 9px', fontSize: 11 }}
                         title="Xem video minh họa"
                       >
                         <Video size={13} />
-                        <span className="hidden-mobile">Video</span>
+                        <span>Video</span>
                       </a>
                     )}
 
@@ -597,7 +581,7 @@ export default function SchedulePage() {
                       title="Chuyển sang thứ khác"
                     >
                       <ArrowRightLeft size={13} />
-                      <span className="hidden-mobile">Chuyển ngày</span>
+                      <span>Chuyển ngày</span>
                     </button>
 
                     {/* Edit button */}
@@ -609,7 +593,7 @@ export default function SchedulePage() {
                       title="Chỉnh sửa bài tập"
                     >
                       <Edit2 size={13} />
-                      <span className="hidden-mobile">Sửa</span>
+                      <span>Sửa</span>
                     </button>
 
                     {/* Delete button */}

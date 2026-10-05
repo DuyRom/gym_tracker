@@ -697,7 +697,68 @@ body {
   }
 }
 
+/* Schedule Exercise Responsive Card */
+.schedule-exercise-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.schedule-exercise-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-exercise-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-icon-subtle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-subtle:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F8FAFC;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-icon-subtle:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tab-label-mobile {
+  display: none;
+}
+.tab-label-desktop {
+  display: inline;
+}
+
 @media (max-width: 899px) {
+  body {
+    padding-bottom: 84px !important;
+  }
   .header-nav {
     display: none;
   }
@@ -718,6 +779,100 @@ body {
   }
   .user-badge {
     padding: 4px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-exercise-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+
+  .schedule-exercise-left {
+    width: 100% !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .schedule-exercise-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 8px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .schedule-exercise-actions .btn,
+  .schedule-exercise-actions .btn-link-action {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .tab-label-desktop {
+    display: none !important;
+  }
+  .tab-label-mobile {
+    display: inline !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px 12px !important;
+  }
+
+  .hero-card {
+    padding: 18px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .day-card {
+    padding: 18px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .hero-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .hero-actions-group {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .hero-actions-group .btn-cta-full {
+    grid-column: span 2 !important;
+    justify-content: center !important;
+    padding: 11px !important;
+  }
+
+  .day-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .day-header-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .gallery-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .gallery-card-img {
+    height: 190px !important;
   }
 }
 
