@@ -14,6 +14,7 @@ export class SessionService {
         workoutDay: {
           include: {
             exercises: {
+              where: { isArchived: false },
               orderBy: { orderIndex: 'asc' },
             },
           },
@@ -40,7 +41,12 @@ export class SessionService {
     // 2. Fetch workout day with exercises
     const workoutDay = await prisma.workoutDay.findUnique({
       where: { id: workoutDayId },
-      include: { exercises: { orderBy: { orderIndex: 'asc' } } },
+      include: {
+        exercises: {
+          where: { isArchived: false },
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
     });
 
     if (!workoutDay) {

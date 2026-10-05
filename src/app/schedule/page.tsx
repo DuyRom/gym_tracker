@@ -2,62 +2,361 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, Video, Dumbbell, Play, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { WorkoutDayItem } from '@/types/workout';
+import {
+  Calendar,
+  Clock,
+  Video,
+  Play,
+  Plus,
+  RotateCcw,
+  History,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  ArrowRightLeft,
+  Edit2,
+  Trash2,
+  Sparkles,
+  Info,
+} from 'lucide-react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import AddExerciseModal from '@/components/schedule/AddExerciseModal';
+import EditExerciseModal from '@/components/schedule/EditExerciseModal';
+import MoveExerciseModal from '@/components/schedule/MoveExerciseModal';
+import ActivityTimelineModal from '@/components/schedule/ActivityTimelineModal';
 
 export default function SchedulePage() {
-  const [days, setDays] = useState<WorkoutDayItem[]>([]);
+  const [days, setDays] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<number>(1); // 1 = T2, 2 = T3...
   const [loading, setLoading] = useState<boolean>(true);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Modals
+  const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [editingExercise, setEditingExercise] = useState<any | null>(null);
+  const [movingExercise, setMovingExercise] = useState<any | null>(null);
+  const [showLogsModal, setShowLogsModal] = useState<boolean>(false);
+  const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
+  const [deletingExercise, setDeletingExercise] = useState<any | null>(null);
+
+  // Drag and Drop state
+  const [draggedExerciseId, setDraggedExerciseId] = useState<string | null>(null);
+  const [dragOverExerciseId, setDragOverExerciseId] = useState<string | null>(null);
+  const [dragOverDayTab, setDragOverDayTab] = useState<number | null>(null);
+
+  // Load schedule data
+  const loadSchedule = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/schedule');
+      const data = await res.json();
+      if (data.days) setDays(data.days);
+      if (data.logs) setLogs(data.logs);
+    } catch (err) {
+      console.error('Failed to load schedule:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('/api/exercises')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.days) setDays(data.days);
-      })
-      .catch((err) => console.error('Failed to load schedule:', err))
-      .finally(() => setLoading(false));
+    loadSchedule();
   }, []);
+
+  const flashMessage = (msg: string) => {
+    setStatusMessage(msg);
+    setTimeout(() => setStatusMessage(null), 3500);
+  };
 
   const currentDay = days.find((d) => d.dayOfWeek === activeTab) || days[0];
 
+  // Reorder exercises locally and commit to API
+  const handleReorder = async (orderedIds: string[]) => {
+    if (!currentDay) return;
+
+    // Optimistic local update
+    const updatedExercises = orderedIds
+      .map((id, index) => {
+        const ex = currentDay.exercises.find((e: any) => e.id === id);
+        return ex ? { ...ex, orderIndex: index + 1 } : null;
+      })
+      .filter(Boolean);
+
+    setDays((prev) =>
+      prev.map((d) => (d.id === currentDay.id ? { ...d, exercises: updatedExercises } : d))
+    );
+
+    try {
+      const res = await fetch('/api/schedule/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dayId: currentDay.id,
+          orderedExerciseIds: orderedIds,
+        }),
+      });
+      const data = await res.json();
+      if (data.days) {
+        setDays(data.days);
+        // Refresh logs in background
+        fetch('/api/schedule/logs')
+          .then((r) => r.json())
+          .then((l) => l.logs && setLogs(l.logs));
+      }
+      flashMessage('Đã cập nhật thứ tự bài tập');
+    } catch (err) {
+      console.error('Reorder error:', err);
+      loadSchedule(); // Revert on failure
+    }
+  };
+
+  // Move exercise up in the list
+  const handleMoveUp = (index: number) => {
+    if (!currentDay || index <= 0) return;
+    const currentExercises = [...currentDay.exercises];
+    const temp = currentExercises[index];
+    currentExercises[index] = currentExercises[index - 1];
+    currentExercises[index - 1] = temp;
+    handleReorder(currentExercises.map((e: any) => e.id));
+  };
+
+  // Move exercise down in the list
+  const handleMoveDown = (index: number) => {
+    if (!currentDay || index >= currentDay.exercises.length - 1) return;
+    const currentExercises = [...currentDay.exercises];
+    const temp = currentExercises[index];
+    currentExercises[index] = currentExercises[index + 1];
+    currentExercises[index + 1] = temp;
+    handleReorder(currentExercises.map((e: any) => e.id));
+  };
+
+  // HTML5 Drag & Drop handlers
+  const handleDragStart = (e: React.DragEvent, exerciseId: string) => {
+    e.dataTransfer.setData('text/plain', exerciseId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedExerciseId(exerciseId);
+  };
+
+  const handleDragOverCard = (e: React.DragEvent, exerciseId: string) => {
+    e.preventDefault();
+    if (draggedExerciseId !== exerciseId) {
+      setDragOverExerciseId(exerciseId);
+    }
+  };
+
+  const handleDropOnCard = (e: React.DragEvent, targetExerciseId: string) => {
+    e.preventDefault();
+    setDragOverExerciseId(null);
+    if (!draggedExerciseId || draggedExerciseId === targetExerciseId || !currentDay) return;
+
+    const ids = currentDay.exercises.map((e: any) => e.id);
+    const fromIndex = ids.indexOf(draggedExerciseId);
+    const toIndex = ids.indexOf(targetExerciseId);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      ids.splice(fromIndex, 1);
+      ids.splice(toIndex, 0, draggedExerciseId);
+      handleReorder(ids);
+    }
+    setDraggedExerciseId(null);
+  };
+
+  // Drop onto another Day Tab (Move exercise across days)
+  const handleDropOnTab = async (e: React.DragEvent, targetDayOfWeek: number) => {
+    e.preventDefault();
+    setDragOverDayTab(null);
+    if (!draggedExerciseId || targetDayOfWeek === activeTab) return;
+
+    const targetDay = days.find((d) => d.dayOfWeek === targetDayOfWeek);
+    if (!targetDay) return;
+
+    try {
+      const res = await fetch('/api/schedule/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          exerciseId: draggedExerciseId,
+          targetDayId: targetDay.id,
+        }),
+      });
+      const data = await res.json();
+      if (data.days) {
+        setDays(data.days);
+        fetch('/api/schedule/logs')
+          .then((r) => r.json())
+          .then((l) => l.logs && setLogs(l.logs));
+      }
+      flashMessage(`Đã chuyển bài sang ${targetDay.name}`);
+    } catch (err) {
+      console.error('Drag move error:', err);
+    } finally {
+      setDraggedExerciseId(null);
+    }
+  };
+
+  // Confirm delete exercise
+  const handleDeleteConfirm = async () => {
+    if (!deletingExercise) return;
+    try {
+      const res = await fetch(`/api/schedule/exercises?exerciseId=${deletingExercise.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.days) {
+        setDays(data.days);
+        fetch('/api/schedule/logs')
+          .then((r) => r.json())
+          .then((l) => l.logs && setLogs(l.logs));
+      }
+      flashMessage(`Đã xóa bài "${deletingExercise.nameVi}" khỏi lịch`);
+    } catch (err) {
+      console.error('Delete error:', err);
+    } finally {
+      setDeletingExercise(null);
+    }
+  };
+
+  // Confirm reset schedule to default
+  const handleResetConfirm = async () => {
+    try {
+      const res = await fetch('/api/schedule/reset', { method: 'POST' });
+      const data = await res.json();
+      if (data.days) {
+        setDays(data.days);
+        fetch('/api/schedule/logs')
+          .then((r) => r.json())
+          .then((l) => l.logs && setLogs(l.logs));
+      }
+      flashMessage('Đã khôi phục giáo án khoa học chuẩn mặc định');
+    } catch (err) {
+      console.error('Reset error:', err);
+    } finally {
+      setShowResetConfirm(false);
+    }
+  };
+
   return (
-    <main className="container">
+    <main className="container" style={{ paddingBottom: 80 }}>
+      {/* Toast Notification */}
+      {statusMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            right: 24,
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #0EA5E9, #0284C7)',
+            color: '#fff',
+            padding: '12px 20px',
+            borderRadius: 12,
+            boxShadow: '0 8px 24px rgba(14, 165, 233, 0.4)',
+            fontSize: 14,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <Sparkles size={16} />
+          <span>{statusMessage}</span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <section className="hero-card">
         <div className="hero-top">
           <div className="title-area">
             <div className="badge-group" style={{ marginBottom: 8 }}>
-              <span className="badge badge-cyan">GIÁO ÁN CHUẨN KHOA HỌC</span>
-              <span className="badge badge-emerald">5 BUỔI / TUẦN</span>
-              <span className="badge badge-purple">45 PHÚT / BUỔI</span>
+              <span className="badge badge-cyan">TÙY BIẾN LINH HOẠT</span>
+              <span className="badge badge-emerald">KÉO THẢ BÀI TẬP</span>
+              <span className="badge badge-purple">NHẬT KÝ THAY ĐỔI</span>
             </div>
-            <h1>Lịch Tập Chi Tiết & Kỹ Thuật Cơ Học</h1>
+            <h1>Lịch Tập Chi Tiết & Tùy Biến Luyện Tập</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 14, maxWidth: 680 }}>
-              Thiết kế theo phân nhánh Upper / Lower / Recovery, tối ưu thời gian 45 phút sau giờ làm việc cho dân IT.
+              Kéo thả sắp xếp bài tập, di chuyển giữa các thứ trong tuần, thêm/xóa bài tập theo nhu cầu thể trạng của riêng bạn.
             </p>
           </div>
 
-          <Link href="/workout" className="btn btn-primary" style={{ padding: '12px 22px' }}>
-            <Play size={16} fill="currentColor" />
-            <span>Vào Phòng Tập Ngay</span>
-          </Link>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowLogsModal(true)}
+              style={{ fontSize: 13 }}
+            >
+              <History size={15} />
+              <span>Nhật Ký Tùy Biến ({logs.length})</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowResetConfirm(true)}
+              style={{ fontSize: 13, color: '#94A3B8' }}
+              title="Khôi phục lại toàn bộ bài tập chuẩn mặc định ban đầu"
+            >
+              <RotateCcw size={15} />
+              <span>Khôi Phục Mặc Định</span>
+            </button>
+
+            <Link href="/workout" className="btn btn-primary" style={{ padding: '10px 18px' }}>
+              <Play size={15} fill="currentColor" />
+              <span>Vào Phòng Tập Ngay</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Tab Selector */}
+        {/* Tab Selector (Supports Drag and Drop target tabs!) */}
         <div className="tab-group" style={{ marginBottom: 0 }}>
           {days.map((d) => {
-            const dayLabels = ['Thứ 2 (Upper A)', 'Thứ 3 (Lower A)', 'Thứ 4 (Active Recovery)', 'Thứ 5 (Upper B)', 'Thứ 6 (Lower B)'];
+            const dayLabels = [
+              'Thứ 2 (Upper A)',
+              'Thứ 3 (Lower A)',
+              'Thứ 4 (Active Recovery)',
+              'Thứ 5 (Upper B)',
+              'Thứ 6 (Lower B)',
+              'Thứ 7',
+              'Chủ Nhật',
+            ];
             const label = dayLabels[d.dayOfWeek - 1] || `Thứ ${d.dayOfWeek + 1}`;
+            const isTabDragOver = dragOverDayTab === d.dayOfWeek;
+
             return (
               <button
                 key={d.id}
                 className={`tab-btn ${activeTab === d.dayOfWeek ? 'active' : ''}`}
+                style={{
+                  position: 'relative',
+                  border: isTabDragOver ? '2px dashed #0EA5E9' : undefined,
+                  background: isTabDragOver ? 'rgba(14, 165, 233, 0.25)' : undefined,
+                  transform: isTabDragOver ? 'scale(1.05)' : undefined,
+                  transition: 'all 0.15s ease',
+                }}
                 onClick={() => setActiveTab(d.dayOfWeek)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (draggedExerciseId && d.dayOfWeek !== activeTab) {
+                    setDragOverDayTab(d.dayOfWeek);
+                  }
+                }}
+                onDragLeave={() => setDragOverDayTab(null)}
+                onDrop={(e) => handleDropOnTab(e, d.dayOfWeek)}
                 type="button"
               >
-                {label}
+                <span>{label}</span>
+                <span
+                  style={{
+                    marginLeft: 6,
+                    fontSize: 11,
+                    padding: '1px 6px',
+                    borderRadius: 10,
+                    background: 'rgba(255,255,255,0.1)',
+                  }}
+                >
+                  {d.exercises?.length || 0}
+                </span>
               </button>
             );
           })}
@@ -66,14 +365,24 @@ export default function SchedulePage() {
 
       {/* Selected Day Content */}
       {currentDay && (
-        <section className="day-card">
-          <div className="day-header">
+        <section className="day-card" style={{ marginTop: 24 }}>
+          {/* Day Header & Actions */}
+          <div className="day-header" style={{ flexWrap: 'wrap', gap: 12 }}>
             <div className="day-title">
-              <span className="day-tag" style={{
-                background: currentDay.dayType === 'RECOVERY' ? 'rgba(139, 92, 246, 0.14)' : 'rgba(14, 165, 233, 0.12)',
-                color: currentDay.dayType === 'RECOVERY' ? '#C4B5FD' : '#38BDF8',
-                borderColor: currentDay.dayType === 'RECOVERY' ? 'rgba(139, 92, 246, 0.3)' : 'rgba(14, 165, 233, 0.28)',
-              }}>
+              <span
+                className="day-tag"
+                style={{
+                  background:
+                    currentDay.dayType === 'RECOVERY'
+                      ? 'rgba(139, 92, 246, 0.14)'
+                      : 'rgba(14, 165, 233, 0.12)',
+                  color: currentDay.dayType === 'RECOVERY' ? '#C4B5FD' : '#38BDF8',
+                  borderColor:
+                    currentDay.dayType === 'RECOVERY'
+                      ? 'rgba(139, 92, 246, 0.3)'
+                      : 'rgba(14, 165, 233, 0.28)',
+                }}
+              >
                 THỨ {currentDay.dayOfWeek + 1 === 7 ? '7' : currentDay.dayOfWeek + 1}
               </span>
               <div>
@@ -81,86 +390,267 @@ export default function SchedulePage() {
                 <div className="day-focus">{currentDay.focus}</div>
               </div>
             </div>
-            <span className="badge badge-emerald">
-              <Clock size={13} />
-              ⏱️ 17:00 – 17:45 ({currentDay.durationMin} phút)
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="badge badge-emerald">
+                <Clock size={13} />
+                ⏱️ {currentDay.durationMin} phút
+              </span>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ padding: '8px 14px', fontSize: 13 }}
+                onClick={() => setShowAddModal(true)}
+              >
+                <Plus size={14} />
+                <span>Thêm Bài Tập</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Helper hint for drag and drop */}
+          <div
+            style={{
+              padding: '10px 14px',
+              background: 'rgba(14, 165, 233, 0.06)',
+              border: '1px solid rgba(14, 165, 233, 0.15)',
+              borderRadius: 8,
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: 12,
+              color: '#94A3B8',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Info size={14} color="#38BDF8" />
+              <span>
+                💡 <strong>Mẹo tùy biến:</strong> Giữ chuột vào thanh ⋮⋮ để kéo thả đổi thứ tự bài tập, hoặc kéo thả thẳng vào Tab Thứ khác để chuyển ngày!
+              </span>
+            </div>
+            <span style={{ color: '#38BDF8', fontWeight: 600 }}>
+              Tổng: {currentDay.exercises?.length || 0} bài tập
             </span>
           </div>
 
-          {/* If Wednesday (Active Recovery), special card styling */}
-          {currentDay.dayOfWeek === 3 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-              {currentDay.exercises.map((ex, idx) => (
-                <div key={ex.id} className="stat-box" style={{ background: 'rgba(15, 23, 42, 0.8)', borderLeft: '3px solid #8B5CF6' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <strong style={{ color: '#A78BFA', fontSize: 15 }}>
-                      {idx + 1}. {ex.nameVi}
-                    </strong>
+          {/* Exercises List (Draggable Cards) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {currentDay.exercises.map((ex: any, idx: number) => {
+              const isDraggingThis = draggedExerciseId === ex.id;
+              const isDragOverThis = dragOverExerciseId === ex.id;
+
+              return (
+                <div
+                  key={ex.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, ex.id)}
+                  onDragOver={(e) => handleDragOverCard(e, ex.id)}
+                  onDragLeave={() => setDragOverExerciseId(null)}
+                  onDrop={(e) => handleDropOnCard(e, ex.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '14px 16px',
+                    borderRadius: 12,
+                    background: isDraggingThis
+                      ? 'rgba(14, 165, 233, 0.12)'
+                      : isDragOverThis
+                      ? 'rgba(14, 165, 233, 0.2)'
+                      : 'rgba(15, 23, 42, 0.65)',
+                    border: '1px solid',
+                    borderColor: isDragOverThis
+                      ? '#0EA5E9'
+                      : isDraggingThis
+                      ? 'rgba(14, 165, 233, 0.5)'
+                      : 'var(--card-border)',
+                    boxShadow: isDragOverThis ? '0 0 16px rgba(14, 165, 233, 0.3)' : 'none',
+                    opacity: isDraggingThis ? 0.6 : 1,
+                    transition: 'all 0.15s ease',
+                    gap: 12,
+                  }}
+                >
+                  {/* Left: Drag handle + STT + Info */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    {/* Drag Handle */}
+                    <div
+                      style={{
+                        cursor: 'grab',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: 4,
+                      }}
+                      title="Kéo thả bài tập"
+                    >
+                      <GripVertical size={18} />
+                    </div>
+
+                    {/* Order Index */}
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#64748B',
+                        width: 24,
+                        textAlign: 'center',
+                      }}
+                    >
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+
+                    {/* Name & Sub-details */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: '#F8FAFC' }}>
+                          {ex.nameVi}
+                        </span>
+                        {ex.nameEn && ex.nameEn !== ex.nameVi && (
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            ({ex.nameEn})
+                          </span>
+                        )}
+                        <span className="badge badge-purple" style={{ fontSize: 11, padding: '1px 6px' }}>
+                          {ex.rir}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-muted)', marginTop: 4, flexWrap: 'wrap' }}>
+                        <span>
+                          ⚙️ <strong style={{ color: '#E2E8F0' }}>{ex.equipment}</strong>
+                        </span>
+                        <span>
+                          🎯 <strong style={{ color: '#38BDF8' }}>{ex.sets} hiệp x {ex.repsMin}–{ex.repsMax} reps</strong>
+                        </span>
+                        {ex.techniqueNote && (
+                          <span style={{ maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.techniqueNote}>
+                            📝 {ex.techniqueNote}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Actions: Reorder + Move + Edit + Delete + Video */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {/* Up / Down buttons */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveUp(idx)}
+                        disabled={idx === 0}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: 2,
+                          color: idx === 0 ? 'rgba(255,255,255,0.1)' : '#94A3B8',
+                          cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                        }}
+                        title="Di chuyển lên"
+                      >
+                        <ChevronUp size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveDown(idx)}
+                        disabled={idx === currentDay.exercises.length - 1}
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          border: 'none',
+                          borderRadius: 4,
+                          padding: 2,
+                          color: idx === currentDay.exercises.length - 1 ? 'rgba(255,255,255,0.1)' : '#94A3B8',
+                          cursor: idx === currentDay.exercises.length - 1 ? 'not-allowed' : 'pointer',
+                        }}
+                        title="Di chuyển xuống"
+                      >
+                        <ChevronDown size={13} />
+                      </button>
+                    </div>
+
+                    {/* Video link */}
                     {ex.videoUrl && (
-                      <a href={ex.videoUrl} target="_blank" rel="noreferrer" className="btn-link-action" style={{ padding: '4px 8px', fontSize: 11 }}>
-                        <Video size={12} />
-                        <span>Video</span>
+                      <a
+                        href={ex.videoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-link-action"
+                        style={{ padding: '6px 8px', fontSize: 11 }}
+                        title="Xem video minh họa"
+                      >
+                        <Video size={13} />
+                        <span className="hidden-mobile">Video</span>
                       </a>
                     )}
-                  </div>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                    {ex.techniqueNote}
-                  </p>
-                  <div style={{ marginTop: 8, fontSize: 12, color: '#C4B5FD', fontWeight: 600 }}>
-                    Thiết bị: {ex.equipment} • {ex.sets} hiệp ({ex.rir})
+
+                    {/* Move to another day */}
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ padding: '6px 10px', fontSize: 12 }}
+                      onClick={() => setMovingExercise(ex)}
+                      title="Chuyển sang thứ khác"
+                    >
+                      <ArrowRightLeft size={13} />
+                      <span className="hidden-mobile">Chuyển ngày</span>
+                    </button>
+
+                    {/* Edit button */}
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ padding: '6px 10px', fontSize: 12 }}
+                      onClick={() => setEditingExercise(ex)}
+                      title="Chỉnh sửa bài tập"
+                    >
+                      <Edit2 size={13} />
+                      <span className="hidden-mobile">Sửa</span>
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ padding: '6px 8px', fontSize: 12, color: '#F87171', borderColor: 'rgba(239, 68, 68, 0.25)' }}
+                      onClick={() => setDeletingExercise(ex)}
+                      title="Xóa bài tập"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            /* Training Days Table */
-            <div className="table-responsive">
-              <table>
-                <thead>
-                  <tr>
-                    <th style={{ width: 50 }}>STT</th>
-                    <th>Tên Bài Tập</th>
-                    <th style={{ width: 130, textAlign: 'center' }}>Video Minh Họa</th>
-                    <th>Thiết Bị</th>
-                    <th>Hiệp x Reps</th>
-                    <th>Ngưỡng RIR</th>
-                    <th>Lưu Ý Kỹ Thuật Sinh Học</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentDay.exercises.map((ex) => (
-                    <tr key={ex.id}>
-                      <td>
-                        <strong>{String(ex.orderIndex).padStart(2, '0')}</strong>
-                      </td>
-                      <td>
-                        <span className="exercise-name">{ex.nameVi}</span>
-                        <span className="exercise-en">{ex.nameEn}</span>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        {ex.videoUrl && (
-                          <a href={ex.videoUrl} target="_blank" rel="noreferrer" className="btn-link-action">
-                            <Video size={13} />
-                            <span>🎬 Xem video</span>
-                          </a>
-                        )}
-                      </td>
-                      <td>{ex.equipment}</td>
-                      <td>
-                        <strong>{ex.sets} hiệp x {ex.repsMin}–{ex.repsMax} reps</strong>
-                      </td>
-                      <td>
-                        <span className="rir-tag">{ex.rir}</span>
-                      </td>
-                      <td style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 320 }}>
-                        {ex.techniqueNote}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+              );
+            })}
+
+            {currentDay.exercises.length === 0 && (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '40px 20px',
+                  background: 'rgba(255,255,255,0.02)',
+                  borderRadius: 12,
+                  border: '1px dashed var(--card-border)',
+                }}
+              >
+                <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>
+                  Ngày này hiện chưa có bài tập nào.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <Plus size={14} />
+                  <span>Thêm Bài Tập Đầu Tiên</span>
+                </button>
+              </div>
+            )}
+          </div>
         </section>
       )}
 
@@ -168,7 +658,14 @@ export default function SchedulePage() {
       <section className="day-card" style={{ marginTop: 28 }}>
         <div className="day-header">
           <div className="day-title">
-            <span className="day-tag" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#F87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+            <span
+              className="day-tag"
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                color: '#F87171',
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+              }}
+            >
               LƯU Ý DÂN IT
             </span>
             <div className="day-name">4 Vấn Đề Cơ Học Dân Code Cần Lưu Ý Khi Tập</div>
@@ -217,6 +714,91 @@ export default function SchedulePage() {
           </div>
         </div>
       </section>
+
+      {/* Add Exercise Modal */}
+      {showAddModal && currentDay && (
+        <AddExerciseModal
+          dayId={currentDay.id}
+          dayName={currentDay.name}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={(updatedDays) => {
+            setDays(updatedDays);
+            setShowAddModal(false);
+            flashMessage('Đã thêm bài tập mới vào lịch');
+            fetch('/api/schedule/logs')
+              .then((r) => r.json())
+              .then((l) => l.logs && setLogs(l.logs));
+          }}
+        />
+      )}
+
+      {/* Edit Exercise Modal */}
+      {editingExercise && currentDay && (
+        <EditExerciseModal
+          exercise={editingExercise}
+          dayName={currentDay.name}
+          onClose={() => setEditingExercise(null)}
+          onSuccess={(updatedDays) => {
+            setDays(updatedDays);
+            setEditingExercise(null);
+            flashMessage('Đã cập nhật bài tập');
+            fetch('/api/schedule/logs')
+              .then((r) => r.json())
+              .then((l) => l.logs && setLogs(l.logs));
+          }}
+          onDeleteRequest={(ex) => setDeletingExercise(ex)}
+        />
+      )}
+
+      {/* Move Exercise Modal */}
+      {movingExercise && currentDay && (
+        <MoveExerciseModal
+          exercise={movingExercise}
+          currentDayId={currentDay.id}
+          allDays={days}
+          onClose={() => setMovingExercise(null)}
+          onSuccess={(updatedDays) => {
+            setDays(updatedDays);
+            setMovingExercise(null);
+            flashMessage('Đã chuyển bài tập sang ngày mới');
+            fetch('/api/schedule/logs')
+              .then((r) => r.json())
+              .then((l) => l.logs && setLogs(l.logs));
+          }}
+        />
+      )}
+
+      {/* Activity Timeline Modal */}
+      {showLogsModal && (
+        <ActivityTimelineModal
+          logs={logs}
+          onClose={() => setShowLogsModal(false)}
+        />
+      )}
+
+      {/* Confirm Delete Exercise Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(deletingExercise)}
+        title="Xóa Bài Tập Khỏi Lịch"
+        message={`Bạn có chắc chắn muốn xóa bài "${deletingExercise?.nameVi}" khỏi lịch tập? Lịch sử các buổi tập đã hoàn thành trong quá khứ vẫn sẽ được lưu trữ an toàn.`}
+        confirmText="Xác Nhận Xóa"
+        cancelText="Hủy"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDeletingExercise(null)}
+      />
+
+      {/* Confirm Reset Dialog */}
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        title="Khôi Phục Giáo Án Mặc Định"
+        message="Hành động này sẽ thiết lập lại toàn bộ bài tập của 5 buổi tập về giáo án khoa học chuẩn ban đầu. Lịch sử các buổi tập bạn đã tập trong quá khứ vẫn được giữ nguyên. Bạn có muốn tiếp tục?"
+        confirmText="Khôi Phục Ngay"
+        cancelText="Hủy Bỏ"
+        variant="warning"
+        onConfirm={handleResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+      />
     </main>
   );
 }

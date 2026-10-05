@@ -19,6 +19,8 @@ model User {
 
   sessions      WorkoutSession[]
   accounts      Account[]
+  workoutDays   WorkoutDay[]
+  scheduleLogs  ScheduleActivityLog[]
 
   @@map("users")
 }
@@ -38,15 +40,18 @@ model Account {
 
 model WorkoutDay {
   id          String   @id @default(cuid())
-  dayOfWeek   Int      // 1=T2, 2=T3, 3=T4, 4=T5, 5=T6
+  userId      String?  // null = template mặc định hệ thống; có userId = lịch tùy biến của user
+  dayOfWeek   Int      // 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7, 7=CN
   name        String   // "Thân Trên A (Upper A)"
   focus       String   // "Ngực Ngang, Lưng Xô, Lưng Dày & Tay Sau"
   dayType     String   @default("TRAINING") // TRAINING | RECOVERY
   durationMin Int      @default(45)
 
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   exercises   Exercise[]
   sessions    WorkoutSession[]
 
+  @@index([userId, dayOfWeek])
   @@map("workout_days")
 }
 
@@ -63,6 +68,7 @@ model Exercise {
   rir           String
   techniqueNote String   @db.Text
   videoUrl      String?
+  isArchived    Boolean  @default(false)
 
   workoutDay    WorkoutDay @relation(fields: [workoutDayId], references: [id], onDelete: Cascade)
   sessionExercises SessionExercise[]
@@ -105,4 +111,17 @@ model SessionExercise {
 
   @@unique([sessionId, exerciseId])
   @@map("session_exercises")
+}
+
+model ScheduleActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // MOVE, ADD, DELETE, EDIT, REORDER, RESET
+  details   String   @db.Text
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("schedule_activity_logs")
 }

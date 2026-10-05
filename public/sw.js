@@ -1,19 +1,25 @@
-const CACHE_NAME = 'gym-tracker-v1.4';
+const CACHE_NAME = 'gym-tracker-v2.1';
 
 const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './images/icon.svg',
-  './images/favicon.svg',
-  './images/icon-192.png',
-  './images/icon-512.png',
-  './images/icon-maskable-192.png',
-  './images/icon-maskable-512.png',
-  './images/apple-touch-icon.png',
-  './images/bench_press_form.jpg',
-  './images/lat_pulldown_form.jpg',
-  './images/rdl_form.jpg'
+  '/',
+  '/manifest.webmanifest',
+  '/images/icon.svg',
+  '/images/favicon.svg',
+  '/images/icon-192.png',
+  '/images/icon-512.png',
+  '/images/icon-maskable-192.png',
+  '/images/icon-maskable-512.png',
+  '/images/apple-touch-icon.png',
+  '/images/bench_press_form.jpg',
+  '/images/lat_pulldown_form.jpg',
+  '/images/rdl_form.jpg',
+  '/images/squat_form.jpg',
+  '/images/leg_press_form.jpg',
+  '/images/shoulder_press_form.jpg',
+  '/images/face_pull_form.jpg',
+  '/images/seated_row_form.jpg',
+  '/images/tricep_pushdown_form.jpg',
+  '/images/bicep_curl_form.jpg'
 ];
 
 // Install Event: Pre-cache static assets
@@ -56,7 +62,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match('./index.html') || caches.match(request))
+        .catch(() => caches.match('/') || caches.match(request))
     );
     return;
   }

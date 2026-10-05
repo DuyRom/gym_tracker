@@ -351,9 +351,9 @@ async function main() {
   for (const dayData of workoutDaysData) {
     const { exercises, ...dayInfo } = dayData;
     
-    // Find existing or create
+    // Find existing or create (template days have userId: null)
     let day = await prisma.workoutDay.findFirst({
-      where: { dayOfWeek: dayInfo.dayOfWeek },
+      where: { dayOfWeek: dayInfo.dayOfWeek, userId: null },
     });
 
     if (!day) {
