@@ -15,7 +15,9 @@ export default function WorkoutPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [sessionNotes, setSessionNotes] = useState<string>('');
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
+  const [showStartConfirm, setShowStartConfirm] = useState<boolean>(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
+  const [starting, setStarting] = useState<boolean>(false);
   const [finishing, setFinishing] = useState<boolean>(false);
   const [completedSummary, setCompletedSummary] = useState({
     durationMin: 0,
@@ -81,9 +83,10 @@ export default function WorkoutPage() {
     };
   }, [activeSession]);
 
-  // 3. Start Session
-  const handleStartSession = async () => {
+  // 3. Start Session execution
+  const executeStartSession = async () => {
     if (!selectedDayId) return;
+    setStarting(true);
     try {
       const res = await fetch('/api/sessions', {
         method: 'POST',
@@ -94,9 +97,12 @@ export default function WorkoutPage() {
       if (data.session) {
         setActiveSession(data.session);
         setElapsedSeconds(0);
+        setShowStartConfirm(false);
       }
     } catch (err) {
       console.error('Failed to start session:', err);
+    } finally {
+      setStarting(false);
     }
   };
 
@@ -267,7 +273,8 @@ export default function WorkoutPage() {
               </div>
             ) : (
               <button
-                onClick={handleStartSession}
+                onClick={() => setShowStartConfirm(true)}
+                disabled={!selectedDayId || loading}
                 className="btn btn-primary"
                 style={{ padding: '12px 26px', fontSize: 15 }}
               >
@@ -456,6 +463,43 @@ export default function WorkoutPage() {
         isOpen={showCompletionModal}
         onClose={() => setShowCompletionModal(false)}
         sessionData={completedSummary}
+      />
+
+      {/* Modern Confirm Dialog for Starting Session */}
+      <ConfirmDialog
+        isOpen={showStartConfirm}
+        onClose={() => setShowStartConfirm(false)}
+        onConfirm={executeStartSession}
+        loading={starting}
+        title="Bắt Đầu Buổi Tập Mới"
+        message={
+          <div>
+            Bạn chuẩn bị bắt đầu tập giáo án:{' '}
+            <strong style={{ color: '#F8FAFC' }}>{currentSelectedDay?.name}</strong>
+            <div
+              style={{
+                marginTop: 10,
+                padding: '10px 14px',
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                borderRadius: 10,
+                color: '#6EE7B7',
+                fontSize: 13,
+                lineHeight: 1.5,
+              }}
+            >
+              <div>🎯 <strong>Nhóm cơ:</strong> {currentSelectedDay?.focus}</div>
+              <div style={{ marginTop: 4 }}>📋 <strong>Số lượng:</strong> {exercisesToDisplay.length} bài tập</div>
+            </div>
+            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+              ⏱️ Hệ thống sẽ bắt đầu bấm giờ và mở danh sách bài tập để bạn ghi nhận số hiệp & mức tạ.
+            </div>
+          </div>
+        }
+        confirmText="Sẵn Sàng, Bắt Đầu!"
+        cancelText="Để sau / Đổi ngày"
+        variant="success"
+        icon={<Dumbbell size={22} />}
       />
 
       {/* Modern Confirm Dialog for Finishing Session */}
