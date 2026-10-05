@@ -701,6 +701,9 @@ body {
   .header-nav {
     display: none;
   }
+  .header-user {
+    display: none !important;
+  }
   .mobile-hamburger-btn {
     display: flex;
   }

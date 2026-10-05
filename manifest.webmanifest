@@ -1,9 +1,9 @@
 {
-  "id": "/?source=pwa",
+  "id": "/",
   "name": "Gym Tracker - Giáo Án Thể Hình & Tăng Cơ",
   "short_name": "Gym Tracker",
   "description": "Giáo án thể hình & xây dựng cơ bắp khoa học chuyên biệt cho Lập Trình Viên",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gym-tracker-v2.1';
+const CACHE_NAME = 'gym-tracker-v2.3';
 
 const STATIC_ASSETS = [
   '/',
@@ -53,12 +53,20 @@ self.addEventListener('fetch', (event) => {
 
   // Strategy for HTML documents: Network-first, fallback to cache
   if (request.mode === 'navigate') {
+    // If accessing legacy /index.html from old PWA shortcut, fetch root /
+    const targetUrl = (url.pathname === '/index.html' || url.pathname.endsWith('/index.html')) ? '/' : request;
+
     event.respondWith(
-      fetch(request)
+      fetch(targetUrl)
         .then((response) => {
           if (response && response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+            return response;
+          }
+          if (response && response.status === 404) {
+            // If navigation returns 404 (e.g. stale PWA index.html), fall back to root page
+            return caches.match('/').then((cached) => cached || fetch('/'));
           }
           return response;
         })

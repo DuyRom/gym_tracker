@@ -7,7 +7,7 @@ import WorkoutTimerWidget from '@/components/workout/WorkoutTimerWidget';
 export const metadata: Metadata = {
   title: 'Gym Tracker - Giáo Án Thể Hình & Tăng Cơ Cho Lập Trình Viên',
   description: 'Ứng dụng theo dõi tập luyện thể hình, bấm giờ buổi tập, quản lý bài tập và thống kê tiến độ tăng cơ cho lập trình viên.',
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest.webmanifest?v=1.0.8',
   icons: {
     icon: '/images/favicon.svg',
     apple: '/images/apple-touch-icon.png',
@@ -53,7 +53,10 @@ export default function RootLayout({
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                   navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('PWA ServiceWorker registered:', reg.scope))
+                    .then(reg => {
+                      console.log('PWA ServiceWorker registered:', reg.scope);
+                      reg.update();
+                    })
                     .catch(err => console.log('PWA SW error:', err));
                 });
               }
