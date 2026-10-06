@@ -15,9 +15,18 @@ desktop.ini
 # Node.js & Next.js
 node_modules/
 .next/
-out/
+out/*
+!out/index.html
 build/
 dist/
+
+# Android build outputs
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+android/*.iml
+android/app/*.iml
 
 # SQLite & local DB
 *.db

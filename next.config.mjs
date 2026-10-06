@@ -15,6 +15,10 @@ const nextConfig = {
         source: '/index',
         destination: '/',
       },
+      {
+        source: '/api/v1/:path*',
+        destination: '/api/:path*',
+      },
     ];
   },
   async headers() {

@@ -1638,3 +1638,27 @@ tr:hover td {
 .gallery-card-img:hover img {
   transform: scale(1.03);
 }
+
+/* ==================== NATIVE APP (CAPACITOR) STYLES ==================== */
+.is-native-app {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.is-native-app input,
+.is-native-app textarea {
+  user-select: auto;
+}
+
+/* Safe area support */
+.is-native-app body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+}
+
+.is-native-app .bottom-nav {
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  height: calc(70px + env(safe-area-inset-bottom, 0px));
+}
+

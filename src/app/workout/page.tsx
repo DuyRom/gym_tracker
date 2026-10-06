@@ -6,6 +6,7 @@ import CompletionModal from '@/components/workout/CompletionModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { WorkoutDayItem, WorkoutSessionItem } from '@/types/workout';
 import { formatDuration } from '@/lib/utils';
+import { hapticSuccess, hapticImpact, hapticSelection } from '@/lib/native-bridge';
 
 export default function WorkoutPage() {
   const [allDays, setAllDays] = useState<WorkoutDayItem[]>([]);
@@ -95,6 +96,7 @@ export default function WorkoutPage() {
       });
       const data = await res.json();
       if (data.session) {
+        hapticImpact();
         setActiveSession(data.session);
         setElapsedSeconds(0);
         setShowStartConfirm(false);
@@ -110,6 +112,12 @@ export default function WorkoutPage() {
   const handleToggleExercise = async (exerciseId: string, currentCompleted: boolean) => {
     if (!activeSession) return;
     const nextCompleted = !currentCompleted;
+
+    if (nextCompleted) {
+      hapticSuccess();
+    } else {
+      hapticSelection();
+    }
 
     // Optimistic UI update
     setActiveSession((prev: any) => {
@@ -181,6 +189,7 @@ export default function WorkoutPage() {
       });
       const data = await res.json();
       if (data.session) {
+        hapticSuccess();
         const completedCount = activeSession.exercises.filter((e) => e.completed).length;
         const totalCount = activeSession.exercises.length;
         setCompletedSummary({
@@ -291,7 +300,10 @@ export default function WorkoutPage() {
             {allDays.map((d) => (
               <button
                 key={d.id}
-                onClick={() => setSelectedDayId(d.id)}
+                onClick={() => {
+                  hapticSelection();
+                  setSelectedDayId(d.id);
+                }}
                 className={`tab-btn ${selectedDayId === d.id ? 'active' : ''}`}
                 type="button"
               >

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, PlayCircle, Calendar, History, LineChart } from 'lucide-react';
+import { hapticSelection } from '@/lib/native-bridge';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -24,6 +25,7 @@ export default function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => hapticSelection()}
             className={`bottom-nav-item ${isActive ? 'active' : ''}`}
           >
             <Icon size={20} />

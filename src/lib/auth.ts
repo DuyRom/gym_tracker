@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import prisma from './prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'gym_tracker_super_secure_jwt_secret_key_2026_odinbi';
@@ -82,8 +82,36 @@ export async function ensureDefaultAdmin() {
   }
 }
 
-export async function getCurrentUser(): Promise<UserSession | null> {
+export async function getCurrentUser(request?: Request): Promise<UserSession | null> {
   try {
+    // Strategy 1: Check Bearer token from explicitly passed Request
+    if (request) {
+      const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7).trim();
+        if (token) {
+          const user = await verifyToken(token);
+          if (user) return user;
+        }
+      }
+    }
+
+    // Strategy 2: Check Bearer token from next/headers
+    try {
+      const headerList = await headers();
+      const authHeader = headerList.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7).trim();
+        if (token) {
+          const user = await verifyToken(token);
+          if (user) return user;
+        }
+      }
+    } catch {
+      // In non-request context (e.g. static generation or scripts), ignore
+    }
+
+    // Strategy 3: Check HTTP-only Cookie (Web browser / WebView)
     const cookieStore = await cookies();
     const token = cookieStore.get(COOKIE_NAME)?.value;
     if (!token) return null;
@@ -93,9 +121,9 @@ export async function getCurrentUser(): Promise<UserSession | null> {
   }
 }
 
-export async function getAuthenticatedUserOrDemo() {
+export async function getAuthenticatedUserOrDemo(request?: Request) {
   await ensureDefaultAdmin();
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (user) {
     const dbUser = await prisma.user.findUnique({ where: { id: user.userId } });
     if (dbUser) return dbUser;
