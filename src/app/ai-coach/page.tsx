@@ -474,17 +474,14 @@ export default function AiCoachPage() {
   const currentExerciseDef = EXERCISES.find((e) => e.key === selectedExercise)!;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 pb-28 pt-4 px-4 max-w-5xl mx-auto">
+    <main className="container ai-coach-container">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between mb-4">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-        >
+      <div className="ai-coach-header">
+        <Link href="/" className="ai-back-btn">
           <ArrowLeft size={16} />
           <span>Trang chủ</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="ai-header-controls">
           {/* Voice Coach Guidance Toggle */}
           <button
             onClick={() => {
@@ -492,35 +489,32 @@ export default function AiCoachPage() {
               setVoiceEnabled(nextVal);
               if (voiceCoach) voiceCoach.setEnabled(nextVal);
             }}
-            className={`p-2 rounded-xl border transition-colors ${
-              voiceEnabled
-                ? 'bg-sky-950/80 border-sky-600 text-sky-400 shadow-sm shadow-sky-500/20'
-                : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
-            }`}
+            className={`ai-icon-toggle-btn ${voiceEnabled ? 'active' : ''}`}
             title={voiceEnabled ? 'Tắt giọng nói AI nhắc form' : 'Bật giọng nói AI nhắc form'}
             type="button"
           >
-            {voiceEnabled ? <Mic size={16} /> : <MicOff size={16} />}
+            {voiceEnabled ? <Mic size={18} /> : <MicOff size={18} />}
           </button>
 
           {/* Sound Beep Toggle */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-sky-400 transition-colors"
+            className={`ai-icon-toggle-btn ${soundEnabled ? 'active' : ''}`}
             title={soundEnabled ? 'Tắt âm thanh bíp' : 'Bật âm thanh bíp'}
             type="button"
           >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
           </button>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-950/60 border border-sky-800/60 text-sky-400 text-xs font-bold">
-            <Sparkles size={13} className="text-sky-400 animate-pulse" />
+
+          <div className="ai-brand-badge">
+            <Sparkles size={14} />
             <span>AI Vision Studio</span>
           </div>
         </div>
       </div>
 
       {/* Exercise Selector Tabs - 6 Exercises Responsive Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+      <div className="ai-exercise-grid">
         {EXERCISES.map((ex) => {
           const isSelected = selectedExercise === ex.key;
           return (
@@ -528,17 +522,13 @@ export default function AiCoachPage() {
               key={ex.key}
               disabled={isSessionActive}
               onClick={() => setSelectedExercise(ex.key)}
-              className={`flex items-center gap-2 p-2.5 rounded-xl text-left border transition-all ${
-                isSelected
-                  ? 'bg-sky-500/15 border-sky-500 text-sky-300 shadow-md shadow-sky-500/10'
-                  : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:bg-slate-800/50'
-              } ${isSessionActive ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+              className={`ai-exercise-card ${isSelected ? 'active' : ''}`}
               type="button"
             >
-              <span className="text-xl">{ex.icon}</span>
-              <div className="overflow-hidden">
-                <p className="text-xs font-bold truncate">{ex.nameVi.split('(')[0]}</p>
-                <p className="text-[10px] text-slate-500 truncate">{ex.nameEn.split('/')[0]}</p>
+              <span className="ai-exercise-icon">{ex.icon}</span>
+              <div className="ai-exercise-info">
+                <p className="ai-exercise-name-vi">{ex.nameVi.split('(')[0]}</p>
+                <p className="ai-exercise-name-en">{ex.nameEn.split('/')[0]}</p>
               </div>
             </button>
           );
@@ -546,9 +536,9 @@ export default function AiCoachPage() {
       </div>
 
       {/* Main Studio Display Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Camera Feed & Canvas Overlay (2 cols on lg) */}
-        <div className="lg:col-span-2 relative">
+      <div className="ai-studio-layout">
+        {/* Camera Feed & Canvas Overlay */}
+        <div style={{ position: 'relative' }}>
           <CameraView
             onFrame={handleFrame}
             isActive={isSessionActive}
@@ -558,18 +548,18 @@ export default function AiCoachPage() {
 
           {/* Overlay HUD Badges (When Active) */}
           {isSessionActive && (
-            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 pointer-events-none">
+            <div className="ai-hud-badges">
               {/* Rep Phase Tag */}
-              <div className="px-3 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-xs font-bold flex items-center gap-1.5 shadow-lg">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="text-slate-300">Nhịp:</span>
-                <span className="text-sky-400 font-mono">{repPhaseText}</span>
+              <div className="ai-hud-badge">
+                <span className="ai-hud-dot-pulse" />
+                <span className="ai-hud-label">Nhịp:</span>
+                <span className="ai-hud-value">{repPhaseText}</span>
               </div>
 
               {/* Angle Tag */}
-              <div className="px-3 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-xs font-bold flex items-center gap-1.5 shadow-lg">
-                <span className="text-slate-400">Góc khớp:</span>
-                <span className="text-emerald-400 font-mono font-bold text-sm">
+              <div className="ai-hud-badge">
+                <span className="ai-hud-label">Góc khớp:</span>
+                <span className="ai-hud-value" style={{ color: '#10B981', fontSize: 13 }}>
                   {Math.round(currentAngle)}°
                 </span>
               </div>
@@ -578,94 +568,90 @@ export default function AiCoachPage() {
 
           {/* Bottom Live Feedback Banner (When Active) */}
           {isSessionActive && (
-            <div className="absolute bottom-4 inset-x-4 z-20 pointer-events-none">
-              <div className="p-3 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-700/80 shadow-2xl flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 overflow-hidden">
-                  <div
-                    className={`w-3 h-3 rounded-full shrink-0 ${
+            <div className="ai-feedback-banner">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', flex: 1 }}>
+                <div
+                  className="ai-feedback-status-dot"
+                  style={{
+                    backgroundColor:
                       formFeedback.score >= 80
-                        ? 'bg-emerald-400'
+                        ? '#10B981'
                         : formFeedback.score >= 60
-                        ? 'bg-amber-400'
-                        : 'bg-rose-500'
-                    }`}
-                  />
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-white truncate">
-                      {formFeedback.statusText}
-                    </p>
-                    {formFeedback.tips.length > 0 && (
-                      <p className="text-[11px] text-slate-400 truncate">
-                        {formFeedback.tips[0]}
-                      </p>
-                    )}
-                  </div>
+                        ? '#F59E0B'
+                        : '#F43F5E',
+                  }}
+                />
+                <div className="ai-feedback-text-area">
+                  <p className="ai-feedback-title">{formFeedback.statusText}</p>
+                  {formFeedback.tips.length > 0 && (
+                    <p className="ai-feedback-tip">{formFeedback.tips[0]}</p>
+                  )}
                 </div>
+              </div>
 
-                {/* Score Pill */}
-                <div className="shrink-0 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold font-mono">
-                  <span
-                    className={
-                      formFeedback.score >= 80
-                        ? 'text-emerald-400'
-                        : formFeedback.score >= 60
-                        ? 'text-amber-400'
-                        : 'text-rose-400'
-                    }
-                  >
-                    {formFeedback.score}% Form
-                  </span>
-                </div>
+              {/* Score Pill */}
+              <div
+                className="ai-feedback-score-pill"
+                style={{
+                  color:
+                    formFeedback.score >= 80
+                      ? '#10B981'
+                      : formFeedback.score >= 60
+                      ? '#F59E0B'
+                      : '#F43F5E',
+                }}
+              >
+                {formFeedback.score}% Form
               </div>
             </div>
           )}
         </div>
 
-        {/* Real-time Dashboard & Controls (1 col on lg) */}
-        <div className="flex flex-col gap-4">
+        {/* Real-time Dashboard & Controls */}
+        <div className="ai-dashboard-sidebar">
           {/* Giant Counter Card */}
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-xl flex flex-col items-center justify-center text-center shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-sky-500 via-emerald-400 to-indigo-500" />
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
-              Số Reps Hoàn Thành
-            </p>
-            <div className="text-6xl font-black font-mono text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-100 to-sky-400 tracking-tight my-2">
-              {repCount}
-            </div>
+          <div className="ai-counter-card">
+            <div className="ai-counter-top-bar" />
+            <p className="ai-counter-label">Số Reps Hoàn Thành</p>
+            <div className="ai-counter-number">{repCount}</div>
 
             {/* Rep Progress Bar */}
-            <div className="w-full bg-slate-800/80 rounded-full h-2 mt-1 overflow-hidden">
+            <div className="ai-progress-track">
               <div
-                className="bg-sky-400 h-full transition-all duration-150 ease-out"
+                className="ai-progress-bar"
                 style={{ width: `${repProgress}%` }}
               />
             </div>
-            <p className="text-[11px] text-slate-500 mt-2 font-medium">
-              Chu kỳ rep: {repProgress}%
-            </p>
+            <p className="ai-progress-info">Chu kỳ rep: {repProgress}%</p>
           </div>
 
           {/* Secondary Stats Row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+          <div className="ai-stats-row">
+            <div className="ai-stat-box">
+              <div
+                className="ai-stat-icon-box"
+                style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10B981' }}
+              >
                 <CheckCircle2 size={18} />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase">Form Chuẩn</p>
-                <p className="text-base font-bold font-mono text-white">
+                <p className="ai-stat-label">Form Chuẩn</p>
+                <p className="ai-stat-value">
                   {goodRepsCount}/{repCount}
                 </p>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400">
+            <div className="ai-stat-box">
+              <div
+                className="ai-stat-icon-box"
+                style={{ background: 'rgba(56, 189, 248, 0.12)', color: '#38BDF8' }}
+              >
                 <Clock size={18} />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase">Thời Gian</p>
-                <p className="text-base font-bold font-mono text-white">
+                <p className="ai-stat-label">Thời Gian</p>
+                <p className="ai-stat-value">
                   {Math.floor(elapsedSec / 60)}:
                   {String(elapsedSec % 60).padStart(2, '0')}
                 </p>
@@ -674,31 +660,29 @@ export default function AiCoachPage() {
           </div>
 
           {/* Exercise Guide Box */}
-          <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 text-xs">
-            <p className="font-bold text-slate-300 mb-1 flex items-center gap-1.5">
+          <div className="ai-guide-box">
+            <p className="ai-guide-title">
               <span>{currentExerciseDef.icon}</span>
               <span>{currentExerciseDef.nameVi}</span>
             </p>
-            <p className="text-slate-400 leading-relaxed mb-2">
-              {currentExerciseDef.description}
-            </p>
-            <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-800 text-[11px] text-sky-400 font-medium">
+            <p className="ai-guide-desc">{currentExerciseDef.description}</p>
+            <div className="ai-guide-standard">
               💡 Tiêu chuẩn: {currentExerciseDef.idealDepth}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-2 mt-auto">
+          <div className="ai-actions-row">
             {!isSessionActive ? (
               <button
                 onClick={startSession}
                 disabled={isModelLoading}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-slate-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 active:scale-98 transition-all disabled:opacity-50"
+                className="ai-start-btn"
                 type="button"
               >
                 {isModelLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                    <div className="ai-spinner" />
                     <span>Đang nạp AI MoveNet...</span>
                   </>
                 ) : (
@@ -709,10 +693,10 @@ export default function AiCoachPage() {
                 )}
               </button>
             ) : (
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: 10, width: '100%' }}>
                 <button
                   onClick={stopSession}
-                  className="flex-1 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 active:scale-95 transition-all"
+                  className="ai-stop-btn"
                   type="button"
                 >
                   <Pause size={16} fill="currentColor" />
@@ -720,7 +704,7 @@ export default function AiCoachPage() {
                 </button>
                 <button
                   onClick={resetSession}
-                  className="p-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all active:scale-95"
+                  className="ai-reset-btn"
                   title="Đặt lại hiệp"
                   type="button"
                 >
@@ -734,33 +718,35 @@ export default function AiCoachPage() {
 
       {/* Summary Modal Dialog */}
       {showSummaryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-2xl bg-sky-500/10 text-sky-400">
-                <Award size={28} />
+        <div className="ai-modal-backdrop">
+          <div className="ai-modal-card">
+            <div className="ai-modal-header">
+              <div className="ai-modal-icon-box">
+                <Award size={26} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Tổng Kết Buổi Tập AI</h3>
-                <p className="text-xs text-slate-400">{currentExerciseDef.nameVi}</p>
+                <h3 className="ai-modal-title">Tổng Kết Buổi Tập AI</h3>
+                <p className="ai-modal-subtitle">{currentExerciseDef.nameVi}</p>
               </div>
             </div>
 
             {/* Score Grid */}
-            <div className="grid grid-cols-3 gap-2 p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-center my-4">
-              <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase">Tổng Reps</p>
-                <p className="text-2xl font-black font-mono text-white mt-1">{repCount}</p>
+            <div className="ai-modal-stats-grid">
+              <div className="ai-modal-stat-item">
+                <p className="ai-modal-stat-label">Tổng Reps</p>
+                <p className="ai-modal-stat-value" style={{ color: '#fff' }}>
+                  {repCount}
+                </p>
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase">Reps Chuẩn</p>
-                <p className="text-2xl font-black font-mono text-emerald-400 mt-1">
+              <div className="ai-modal-stat-item">
+                <p className="ai-modal-stat-label">Reps Chuẩn</p>
+                <p className="ai-modal-stat-value" style={{ color: '#10B981' }}>
                   {goodRepsCount}
                 </p>
               </div>
-              <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase">Điểm Form TB</p>
-                <p className="text-2xl font-black font-mono text-sky-400 mt-1">
+              <div className="ai-modal-stat-item">
+                <p className="ai-modal-stat-label">Điểm Form TB</p>
+                <p className="ai-modal-stat-value" style={{ color: '#38BDF8' }}>
                   {formScoresHistory.length > 0
                     ? Math.round(
                         formScoresHistory.reduce((a, b) => a + b, 0) /
@@ -772,10 +758,10 @@ export default function AiCoachPage() {
               </div>
             </div>
 
-            <div className="flex gap-2 mt-6">
+            <div className="ai-modal-actions">
               <button
                 onClick={() => setShowSummaryModal(false)}
-                className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs active:scale-95 transition-all"
+                className="ai-btn-secondary"
                 type="button"
               >
                 Đóng
@@ -783,7 +769,7 @@ export default function AiCoachPage() {
               <button
                 onClick={handleSaveSession}
                 disabled={isSaving}
-                className="flex-1 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-sky-500/20 active:scale-95 transition-all disabled:opacity-50"
+                className="ai-btn-primary"
                 type="button"
               >
                 {isSaving ? 'Đang lưu...' : 'Lưu Vào Hồ Sơ'}

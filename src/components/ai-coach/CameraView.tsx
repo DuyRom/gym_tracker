@@ -122,17 +122,14 @@ export default function CameraView({
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl flex items-center justify-center min-h-[360px] sm:min-h-[460px]">
+    <div className="ai-camera-container">
       {/* Hidden/Active Video Feed */}
       <video
         ref={videoRef}
         playsInline
         muted
         autoPlay
-        className={`w-full h-full object-cover rounded-2xl ${
-          facingMode === 'user' ? 'scale-x-[-1]' : ''
-        }`}
-        style={{ maxHeight: '70vh' }}
+        className={`ai-camera-video ${facingMode === 'user' ? 'flipped' : ''}`}
         onLoadedMetadata={() => {
           if (videoRef.current && canvasRef.current) {
             canvasRef.current.width = videoRef.current.videoWidth || 640;
@@ -144,34 +141,34 @@ export default function CameraView({
       {/* Canvas Overlay for Skeleton and Indicators */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none rounded-2xl"
-        style={{ maxHeight: '70vh' }}
+        className="ai-camera-canvas"
       />
 
       {/* Switch Camera Button */}
       {isStreaming && (
         <button
           onClick={toggleCamera}
-          className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-xs font-semibold text-sky-400 border border-slate-700/60 backdrop-blur-md shadow-lg transition-all active:scale-95"
+          className="ai-camera-switch-btn"
           type="button"
           title="Đổi camera trước / sau"
         >
-          <RefreshCw size={14} className="animate-spin-slow" />
+          <RefreshCw size={14} />
           <span>{facingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
         </button>
       )}
 
       {/* Permission Denied / Error State */}
       {permissionState === 'denied' && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-950/95 backdrop-blur-lg">
-          <AlertCircle size={48} className="text-rose-500 mb-3" />
-          <h3 className="text-lg font-bold text-white mb-2">Chưa có quyền Camera</h3>
-          <p className="text-sm text-slate-400 max-w-sm mb-5 leading-relaxed">
+        <div className="ai-camera-overlay">
+          <AlertCircle size={48} color="#F43F5E" style={{ marginBottom: 8 }} />
+          <h3>Chưa có quyền Camera</h3>
+          <p>
             {errorMessage || 'Ứng dụng cần quyền Camera để AI phân tích tư thế và đếm reps theo thời gian thực.'}
           </p>
           <button
             onClick={startStream}
-            className="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95 transition-all"
+            className="ai-btn-primary"
+            style={{ maxWidth: 220 }}
             type="button"
           >
             <Camera size={18} />
@@ -182,9 +179,9 @@ export default function CameraView({
 
       {/* Prompt / Loading State */}
       {isActive && !isStreaming && permissionState !== 'denied' && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm">
-          <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm font-medium text-slate-300">Đang khởi động Camera AI...</p>
+        <div className="ai-camera-overlay">
+          <div className="ai-spinner" style={{ width: 36, height: 36, borderWidth: 3, marginBottom: 14 }} />
+          <p style={{ color: 'var(--text-main)', fontWeight: 600 }}>Đang khởi động Camera AI...</p>
         </div>
       )}
     </div>
