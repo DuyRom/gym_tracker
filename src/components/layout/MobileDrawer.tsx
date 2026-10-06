@@ -74,6 +74,13 @@ export default function MobileDrawer({
       color: '#10B981',
     },
     {
+      href: '/ai-coach',
+      label: 'AI Vision Coach',
+      desc: 'Đếm reps & phân tích form qua Camera',
+      icon: Sparkles,
+      color: '#38BDF8',
+    },
+    {
       href: '/schedule',
       label: 'Lịch Tập 5 Ngày',
       desc: 'Giáo án Thân Trên - Thân Dưới',

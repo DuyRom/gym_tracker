@@ -19,7 +19,14 @@ Hỗ trợ đa nền tảng: **Web Browser**, **PWA (iOS/Safari & Desktop)**, v�
    - Ghi nhận số hiệp thực tế, số reps và **mức tạ (kg)** nâng được (tự động đồng bộ lên Database).
    - Nút **⏹️ KẾT THÚC BUỔI TẬP** tính toán chính xác tổng thời gian (phút), rung ăn mừng và bắn pháo hoa Confetti 🎉.
 
-2. **📱 Native Android Experience (Capacitor):**
+2. **🤖 AI Computer Vision Coach (MoveNet Lightning & TensorFlow.js):**
+   - Phân tích video camera trực tiếp on-device qua WebGL (không cần GPU server, bảo mật 100%).
+   - **Đếm Reps Tự Động:** Thuật toán State Machine nhận diện chu kỳ chuyển động kèm bộ lọc Hysteresis chống rung giật.
+   - **Chấm Điểm & Sửa Form Thời Gian Thực:** Đánh giá góc gập khớp gối, khớp hông, cùi chỏ cho Squat, Bicep Curl, Shoulder Press, Push-up.
+   - **HUD Trực Quan & Phản Hồi Xúc Giác:** Khung xương Skeleton vẽ trên Canvas, hiển thị góc khớp real-time, rung Haptic và âm thanh khi hoàn thành rep.
+   - **Lưu Trữ Buổi Tập:** Tự động tổng kết số reps chuẩn, điểm form trung bình và lưu vào Database.
+
+3. **📱 Native Android Experience (Capacitor):**
    - **Tactile Haptic Feedback:** Tích hợp rung xúc giác chuẩn phần cứng khi hoàn thành hiệp tập, chuyển bài, đổi ngày tập và điều hướng menu.
    - **Immersive Dark Status Bar:** Thanh trạng thái hệ thống đồng bộ giao diện Dark Theme (`#0a0a0f`).
    - **Hardware Back Button:** Phím Back vật lý trên điện thoại điều hướng lùi trang mượt mà hoặc thoát ứng dụng an toàn.
@@ -106,6 +113,8 @@ Hỗ trợ đa nền tảng: **Web Browser**, **PWA (iOS/Safari & Desktop)**, v�
 | `POST` | `/api/v1/sessions/[id]/exercises` | Cập nhật hoàn thành / mức tạ bài tập | Bearer Token hoặc Cookie |
 | `GET` | `/api/v1/stats` | Dữ liệu thống kê & biểu đồ | Bearer Token hoặc Cookie |
 | `GET` | `/api/v1/users` | Danh sách thành viên (Admin) | Bearer Token hoặc Cookie |
+| `GET` | `/api/v1/ai-coach/sessions` | Lịch sử các buổi tập với AI Coach | Bearer Token hoặc Cookie |
+| `POST` | `/api/v1/ai-coach/sessions` | Lưu kết quả buổi tập AI Coach (reps, form score) | Bearer Token hoặc Cookie |
 
 ---
 

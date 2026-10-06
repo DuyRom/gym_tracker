@@ -21,6 +21,7 @@ model User {
   accounts      Account[]
   workoutDays   WorkoutDay[]
   scheduleLogs  ScheduleActivityLog[]
+  aiCoachSessions AiCoachSession[]
 
   @@map("users")
 }
@@ -125,3 +126,22 @@ model ScheduleActivityLog {
   @@index([userId, createdAt])
   @@map("schedule_activity_logs")
 }
+
+model AiCoachSession {
+  id              String   @id @default(cuid())
+  userId          String
+  exerciseType    String   // 'squat', 'bicep_curl', 'shoulder_press', 'pushup'
+  exerciseName    String
+  totalReps       Int
+  goodReps        Int
+  avgFormScore    Float
+  durationSec     Int
+  feedbackSummary String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("ai_coach_sessions")
+}
+

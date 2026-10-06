@@ -18,6 +18,7 @@ import {
   Key,
   Shield,
   Menu,
+  Sparkles,
 } from 'lucide-react';
 import ChangePasswordModal from '@/components/auth/ChangePasswordModal';
 import MobileDrawer from '@/components/layout/MobileDrawer';
@@ -78,6 +79,7 @@ export default function Header() {
   const navLinks = [
     { href: '/', label: 'Tổng Quan', icon: LayoutDashboard },
     { href: '/workout', label: 'Tập Luyện', icon: PlayCircle },
+    { href: '/ai-coach', label: 'AI Coach', icon: Sparkles },
     { href: '/schedule', label: 'Lịch Tập', icon: Calendar },
     { href: '/history', label: 'Lịch Sử', icon: History },
     { href: '/analytics', label: 'Phân Tích', icon: LineChart },
