@@ -24,6 +24,7 @@ import AddExerciseModal from '@/components/schedule/AddExerciseModal';
 import EditExerciseModal from '@/components/schedule/EditExerciseModal';
 import MoveExerciseModal from '@/components/schedule/MoveExerciseModal';
 import ActivityTimelineModal from '@/components/schedule/ActivityTimelineModal';
+import TechniqueDetailModal from '@/components/workout/TechniqueDetailModal';
 
 export default function SchedulePage() {
   const [days, setDays] = useState<any[]>([]);
@@ -39,6 +40,7 @@ export default function SchedulePage() {
   const [showLogsModal, setShowLogsModal] = useState<boolean>(false);
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [deletingExercise, setDeletingExercise] = useState<any | null>(null);
+  const [selectedTechniqueExercise, setSelectedTechniqueExercise] = useState<any | null>(null);
 
   // Drag and Drop state
   const [draggedExerciseId, setDraggedExerciseId] = useState<string | null>(null);
@@ -529,6 +531,26 @@ export default function SchedulePage() {
                             📝 {ex.techniqueNote}
                           </span>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTechniqueExercise(ex)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 7px',
+                            borderRadius: 6,
+                            background: 'rgba(56, 189, 248, 0.1)',
+                            border: '1px solid rgba(56, 189, 248, 0.25)',
+                            color: '#38BDF8',
+                            fontSize: 10,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                          title="Xem hướng dẫn chi tiết cài đặt thiết bị, tư thế và nhịp thở"
+                        >
+                          <Sparkles size={10} /> ℹ️ Kỹ thuật sinh học
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -782,6 +804,13 @@ export default function SchedulePage() {
         variant="warning"
         onConfirm={handleResetConfirm}
         onClose={() => setShowResetConfirm(false)}
+      />
+
+      {/* Biomechanical Technique Detail Modal */}
+      <TechniqueDetailModal
+        isOpen={Boolean(selectedTechniqueExercise)}
+        onClose={() => setSelectedTechniqueExercise(null)}
+        exercise={selectedTechniqueExercise}
       />
     </main>
   );

@@ -10,6 +10,8 @@ export default function WorkoutTimerWidget() {
   const [isMinimized, setIsMinimized] = useState<boolean>(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const endTimeRef = useRef<number | null>(null);
+
   // Restore minimized preference if stored
   useEffect(() => {
     try {
@@ -53,6 +55,7 @@ export default function WorkoutTimerWidget() {
 
   const handleSelectPreset = (sec: number) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    endTimeRef.current = null;
     setIsRunning(false);
     setDuration(sec);
     setTimeRemaining(sec);
@@ -61,39 +64,58 @@ export default function WorkoutTimerWidget() {
   const toggleTimer = () => {
     if (isRunning) {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      endTimeRef.current = null;
       setIsRunning(false);
     } else {
-      if (timeRemaining <= 0) setTimeRemaining(duration);
+      const rem = timeRemaining <= 0 ? duration : timeRemaining;
+      setTimeRemaining(rem);
+      endTimeRef.current = Date.now() + rem * 1000;
       setIsRunning(true);
     }
   };
 
   const resetTimer = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    endTimeRef.current = null;
     setIsRunning(false);
     setTimeRemaining(duration);
   };
 
   useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            setIsRunning(false);
-            playBeep();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (isRunning && endTimeRef.current) {
+      const updateRestTimer = () => {
+        if (!endTimeRef.current) return;
+        const rem = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+        if (rem <= 0) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setIsRunning(false);
+          setTimeRemaining(0);
+          endTimeRef.current = null;
+          playBeep();
+        } else {
+          setTimeRemaining(rem);
+        }
+      };
+
+      intervalRef.current = setInterval(updateRestTimer, 1000);
+
+      const handleSync = () => {
+        if (document.visibilityState === 'visible') {
+          updateRestTimer();
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleSync);
+      window.addEventListener('focus', handleSync);
+
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        document.removeEventListener('visibilitychange', handleSync);
+        window.removeEventListener('focus', handleSync);
+      };
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
   }, [isRunning]);
 
   // If minimized, render a sleek, non-intrusive floating capsule trigger
