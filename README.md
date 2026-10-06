@@ -141,7 +141,7 @@ Trong giao diện Android Studio:
 
 ### Cách 3: Build Cục Bộ Bằng Dòng Lệnh (CLI)
 Yêu cầu môi trường đã cài:
-* OpenJDK 17 (`sudo apt install -y openjdk-17-jdk`)
+* OpenJDK 21 (`sudo apt install -y openjdk-21-jdk`)
 * Android SDK (`$ANDROID_HOME`)
 
 Chạy script tự động:

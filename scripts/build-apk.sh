@@ -7,9 +7,9 @@ echo "=========================================="
 
 # Check Java
 if ! command -v java &> /dev/null; then
-  echo "❌ Java (JDK 17+) không tìm thấy trong PATH."
-  echo "👉 Vui lòng cài đặt OpenJDK 17:"
-  echo "   sudo apt install -y openjdk-17-jdk"
+  echo "❌ Java (JDK 21+) không tìm thấy trong PATH."
+  echo "👉 Vui lòng cài đặt OpenJDK 21:"
+  echo "   sudo apt install -y openjdk-21-jdk"
   exit 1
 fi
 
