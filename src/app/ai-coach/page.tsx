@@ -18,6 +18,7 @@ import {
   VolumeX,
   Mic,
   MicOff,
+  HelpCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -55,6 +56,13 @@ import {
 } from '@/lib/ai-coach/pose-detector';
 import { voiceCoach } from '@/lib/ai-coach/voice-coach';
 import { hapticSuccess, hapticImpact } from '@/lib/native-bridge';
+import CameraSetupGuideModal, {
+  CAMERA_GUIDE_DISMISSED_KEY,
+} from '@/components/ai-coach/CameraSetupGuideModal';
+import {
+  evaluateFraming,
+  FramingFeedback,
+} from '@/lib/ai-coach/framing-evaluator';
 
 // Dynamic import CameraView to avoid SSR issues
 const CameraView = dynamic(() => import('@/components/ai-coach/CameraView'), {
@@ -213,9 +221,23 @@ export default function AiCoachPage() {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Camera Setup Guide & Live Framing States
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [framingFeedback, setFramingFeedback] = useState<FramingFeedback | null>(null);
+
   // Engine references
   const repCounterRef = useRef<RepCounter | null>(null);
   const isDetectingRef = useRef(false);
+
+  // Check first-time opening
+  useEffect(() => {
+    try {
+      const isDismissed = localStorage.getItem(CAMERA_GUIDE_DISMISSED_KEY);
+      if (!isDismissed) {
+        setIsGuideOpen(true);
+      }
+    } catch {}
+  }, []);
 
   // Initialize or re-configure RepCounter when exercise changes
   useEffect(() => {
@@ -263,6 +285,17 @@ export default function AiCoachPage() {
     }
   };
 
+  const handleStartClick = () => {
+    try {
+      const isDismissed = localStorage.getItem(CAMERA_GUIDE_DISMISSED_KEY);
+      if (!isDismissed) {
+        setIsGuideOpen(true);
+        return;
+      }
+    } catch {}
+    startSession();
+  };
+
   const stopSession = () => {
     setIsSessionActive(false);
     setShowSummaryModal(true);
@@ -300,6 +333,20 @@ export default function AiCoachPage() {
         const keypoints = await detectPose(video);
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
+
+        // Evaluate live framing distance & position
+        if (keypoints) {
+          const framing = evaluateFraming(keypoints, canvas.width, canvas.height, selectedExercise);
+          setFramingFeedback(framing);
+        } else {
+          setFramingFeedback({
+            status: 'no_person',
+            isOptimal: false,
+            message: 'Chưa nhận diện được người',
+            advice: 'Vui lòng đứng vào trước camera',
+            heightRatio: 0,
+          });
+        }
 
         if (!keypoints || keypoints.length < 17) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -558,6 +605,18 @@ export default function AiCoachPage() {
           <span>Trang chủ</span>
         </Link>
         <div className="ai-header-controls">
+          {/* Camera Setup Guide Button */}
+          <button
+            onClick={() => setIsGuideOpen(true)}
+            className="ai-icon-toggle-btn active"
+            title="Xem hướng dẫn khoảng cách & góc đặt camera"
+            type="button"
+            style={{ width: 'auto', padding: '0 12px', gap: 6 }}
+          >
+            <HelpCircle size={16} />
+            <span style={{ fontSize: 12, fontWeight: 700 }}>Góc đặt camera</span>
+          </button>
+
           {/* Voice Coach Guidance Toggle */}
           <button
             onClick={() => {
@@ -620,6 +679,8 @@ export default function AiCoachPage() {
             isActive={isSessionActive}
             facingMode={facingMode}
             onFacingModeChange={setFacingMode}
+            onOpenGuide={() => setIsGuideOpen(true)}
+            framingFeedback={framingFeedback}
           />
 
           {/* Overlay HUD Badges (When Active) */}
@@ -751,7 +812,7 @@ export default function AiCoachPage() {
           <div className="ai-actions-row">
             {!isSessionActive ? (
               <button
-                onClick={startSession}
+                onClick={handleStartClick}
                 disabled={isModelLoading}
                 className="ai-start-btn"
                 type="button"
@@ -854,6 +915,18 @@ export default function AiCoachPage() {
           </div>
         </div>
       )}
+
+      {/* Camera Setup Guide Modal */}
+      <CameraSetupGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        currentExerciseKey={selectedExercise}
+        onStart={() => {
+          if (!isSessionActive) {
+            startSession();
+          }
+        }}
+      />
     </main>
   );
 }

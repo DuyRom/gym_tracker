@@ -16,6 +16,7 @@ import {
   Zap,
   Clock,
   ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -51,6 +52,13 @@ import {
 } from '@/lib/ai-coach/pose-detector';
 import { voiceCoach } from '@/lib/ai-coach/voice-coach';
 import { hapticSuccess, hapticImpact, hapticSelection } from '@/lib/native-bridge';
+import CameraSetupGuideModal, {
+  CAMERA_GUIDE_DISMISSED_KEY,
+} from '@/components/ai-coach/CameraSetupGuideModal';
+import {
+  evaluateFraming,
+  FramingFeedback,
+} from '@/lib/ai-coach/framing-evaluator';
 
 // Dynamic import CameraView
 const CameraView = dynamic(() => import('@/components/ai-coach/CameraView'), {
@@ -269,9 +277,25 @@ export default function AiCoachInlineModal({
   const [formScoresHistory, setFormScoresHistory] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Camera Setup Guide & Live Framing
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [framingFeedback, setFramingFeedback] = useState<FramingFeedback | null>(null);
+
   // Engine references
   const repCounterRef = useRef<RepCounter | null>(null);
   const isDetectingRef = useRef(false);
+
+  // Show guide on first open if not dismissed
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const isDismissed = localStorage.getItem(CAMERA_GUIDE_DISMISSED_KEY);
+        if (!isDismissed) {
+          setIsGuideOpen(true);
+        }
+      } catch {}
+    }
+  }, [isOpen]);
 
   // Sync exercise selection when exercise changes
   useEffect(() => {
@@ -334,6 +358,17 @@ export default function AiCoachInlineModal({
     }
   };
 
+  const handleStartSessionWithGuideCheck = () => {
+    try {
+      const isDismissed = localStorage.getItem(CAMERA_GUIDE_DISMISSED_KEY);
+      if (!isDismissed) {
+        setIsGuideOpen(true);
+        return;
+      }
+    } catch {}
+    handleStartSession();
+  };
+
   const handlePauseSession = () => {
     setIsSessionActive(false);
   };
@@ -360,6 +395,20 @@ export default function AiCoachInlineModal({
         const keypoints = await detectPose(video);
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
+
+        // Evaluate live framing distance & position
+        if (keypoints) {
+          const framing = evaluateFraming(keypoints, canvas.width, canvas.height, selectedExercise);
+          setFramingFeedback(framing);
+        } else {
+          setFramingFeedback({
+            status: 'no_person',
+            isOptimal: false,
+            message: 'Chưa nhận diện được người',
+            advice: 'Vui lòng đứng vào trước camera',
+            heightRatio: 0,
+          });
+        }
 
         if (!keypoints || keypoints.length < 17) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -592,7 +641,8 @@ export default function AiCoachInlineModal({
       : formFeedback.score;
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+    <>
+      <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
       <div
         className="modal-container"
         onClick={(e) => e.stopPropagation()}
@@ -661,6 +711,29 @@ export default function AiCoachInlineModal({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              style={{
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                color: '#38BDF8',
+                padding: '0 10px',
+                height: 34,
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+              title="Xem hướng dẫn khoảng cách & góc đặt camera"
+            >
+              <HelpCircle size={15} />
+              <span className="hide-on-mobile">Góc đặt máy</span>
+            </button>
+
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               style={{
@@ -765,6 +838,8 @@ export default function AiCoachInlineModal({
             isActive={isSessionActive}
             facingMode={facingMode}
             onFacingModeChange={(m) => setFacingMode(m)}
+            onOpenGuide={() => setIsGuideOpen(true)}
+            framingFeedback={framingFeedback}
           />
 
           {/* Floating Reps & Score Overlay HUD */}
@@ -993,7 +1068,7 @@ export default function AiCoachInlineModal({
             ) : (
               <button
                 type="button"
-                onClick={handleStartSession}
+                onClick={handleStartSessionWithGuideCheck}
                 style={{
                   padding: '9px 16px',
                   borderRadius: 10,
@@ -1070,5 +1145,18 @@ export default function AiCoachInlineModal({
         </div>
       </div>
     </div>
+
+    {/* Camera Setup Guide Modal */}
+    <CameraSetupGuideModal
+      isOpen={isGuideOpen}
+      onClose={() => setIsGuideOpen(false)}
+      currentExerciseKey={selectedExercise}
+      onStart={() => {
+        if (!isSessionActive) {
+          handleStartSession();
+        }
+      }}
+    />
+  </>
   );
 }

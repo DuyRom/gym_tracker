@@ -1,13 +1,26 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Camera, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  Camera,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  HelpCircle,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Maximize2,
+  Sparkles,
+} from 'lucide-react';
+import { FramingFeedback } from '@/lib/ai-coach/framing-evaluator';
 
 interface CameraViewProps {
   onFrame: (video: HTMLVideoElement, canvas: HTMLCanvasElement) => void;
   isActive: boolean;
   facingMode?: 'user' | 'environment';
   onFacingModeChange?: (mode: 'user' | 'environment') => void;
+  onOpenGuide?: () => void;
+  framingFeedback?: FramingFeedback | null;
 }
 
 export default function CameraView({
@@ -15,6 +28,8 @@ export default function CameraView({
   isActive,
   facingMode = 'user',
   onFacingModeChange,
+  onOpenGuide,
+  framingFeedback,
 }: CameraViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -144,17 +159,87 @@ export default function CameraView({
         className="ai-camera-canvas"
       />
 
-      {/* Switch Camera Button */}
+      {/* Futuristic HUD Corner Brackets */}
       {isStreaming && (
-        <button
-          onClick={toggleCamera}
-          className="ai-camera-switch-btn"
-          type="button"
-          title="Đổi camera trước / sau"
+        <div className="ai-camera-hud-corners">
+          <div className="ai-hud-corner ai-hud-corner-tl" />
+          <div className="ai-hud-corner ai-hud-corner-tr" />
+          <div className="ai-hud-corner ai-hud-corner-bl" />
+          <div className="ai-hud-corner ai-hud-corner-br" />
+        </div>
+      )}
+
+      {/* Top Center Live Framing Pill Indicator */}
+      {isStreaming && framingFeedback && (
+        <div
+          className={`ai-camera-framing-pill ${
+            framingFeedback.isOptimal
+              ? 'optimal'
+              : framingFeedback.status === 'no_person'
+              ? 'searching'
+              : 'warning'
+          }`}
         >
-          <RefreshCw size={14} />
-          <span>{facingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
-        </button>
+          {framingFeedback.isOptimal ? (
+            <>
+              <CheckCircle size={13} />
+              <span>{framingFeedback.message}</span>
+            </>
+          ) : framingFeedback.status === 'too_close' ? (
+            <>
+              <ArrowDownLeft size={13} />
+              <span>{framingFeedback.advice}</span>
+            </>
+          ) : framingFeedback.status === 'too_far' ? (
+            <>
+              <ArrowUpRight size={13} />
+              <span>{framingFeedback.advice}</span>
+            </>
+          ) : framingFeedback.status === 'out_of_bounds' ? (
+            <>
+              <Maximize2 size={13} />
+              <span>{framingFeedback.advice}</span>
+            </>
+          ) : framingFeedback.status === 'missing_joints' ? (
+            <>
+              <AlertCircle size={13} />
+              <span>{framingFeedback.advice}</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={13} />
+              <span>{framingFeedback.advice}</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Top Right Actions (Guide button + Switch Camera) */}
+      {isStreaming && (
+        <div className="ai-camera-top-actions">
+          {onOpenGuide && (
+            <button
+              onClick={onOpenGuide}
+              className="ai-camera-guide-btn"
+              type="button"
+              title="Xem hướng dẫn khoảng cách & góc đặt camera"
+            >
+              <HelpCircle size={14} />
+              <span>Góc đặt máy</span>
+            </button>
+          )}
+
+          <button
+            onClick={toggleCamera}
+            className="ai-camera-switch-btn"
+            type="button"
+            title="Đổi camera trước / sau"
+            style={{ position: 'static' }}
+          >
+            <RefreshCw size={14} />
+            <span>{facingMode === 'user' ? 'Cam Trước' : 'Cam Sau'}</span>
+          </button>
+        </div>
       )}
 
       {/* Permission Denied / Error State */}

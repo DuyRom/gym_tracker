@@ -65,7 +65,7 @@ if [[ "$1" == "build" ]]; then
   fi
   
   echo "🔨 Building image odbadmin/fit:$TAG and odbadmin/fit:latest..."
-  docker build -t odbadmin/fit:$TAG -t odbadmin/fit:latest -f Dockerfile .
+  docker build --network=host -t odbadmin/fit:$TAG -t odbadmin/fit:latest -f Dockerfile .
   
   echo "⬆️ Pushing images to Docker Hub..."
   docker push odbadmin/fit:$TAG

@@ -1,7 +1,7 @@
 # ==========================================
 # 1. Base stage
 # ==========================================
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 WORKDIR /app
 # Install openssl and libc6-compat for Prisma engine on Alpine
 RUN apk add --no-cache libc6-compat openssl
@@ -13,7 +13,12 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
-RUN npm ci
+# Configure npm network resilience against ECONNRESET on large dependencies
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 300000 && \
+    (npm ci --no-audit || (sleep 2 && npm ci --no-audit) || (sleep 5 && npm ci --no-audit))
 
 # ==========================================
 # 3. Builder stage
@@ -25,7 +30,7 @@ COPY . .
 
 # Generate Prisma Client and bundle seed script
 RUN npx prisma generate
-RUN npx esbuild prisma/seed.ts --bundle --platform=node --target=node20 --external:@prisma/client --outfile=prisma/seed.js
+RUN npx esbuild prisma/seed.ts --bundle --platform=node --target=node22 --external:@prisma/client --outfile=prisma/seed.js
 
 # Build Next.js app in standalone mode
 ENV NEXT_TELEMETRY_DISABLED=1

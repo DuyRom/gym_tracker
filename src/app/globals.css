@@ -1915,6 +1915,104 @@ tr:hover td {
   transform: scale(0.96);
 }
 
+.ai-camera-top-actions {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-camera-guide-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(11, 16, 28, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.ai-camera-guide-btn:hover {
+  background: rgba(14, 165, 233, 0.2);
+  color: #fff;
+  border-color: #38BDF8;
+}
+
+.ai-camera-guide-btn:active {
+  transform: scale(0.96);
+}
+
+.ai-camera-framing-pill {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 26;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ai-camera-framing-pill.optimal {
+  background: rgba(6, 78, 59, 0.9);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  color: #34D399;
+}
+
+.ai-camera-framing-pill.warning {
+  background: rgba(120, 53, 15, 0.9);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #FCD34D;
+}
+
+.ai-camera-framing-pill.searching {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94A3B8;
+}
+
+/* HUD Corner Brackets */
+.ai-camera-hud-corners {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.ai-hud-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(56, 189, 248, 0.35);
+  border-style: solid;
+}
+
+.ai-hud-corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-top-left-radius: 8px; }
+.ai-hud-corner-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-top-right-radius: 8px; }
+.ai-hud-corner-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-bottom-left-radius: 8px; }
+.ai-hud-corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-bottom-right-radius: 8px; }
+
+
 /* HUD Overlay Badges (Top Left) */
 .ai-hud-badges {
   position: absolute;
