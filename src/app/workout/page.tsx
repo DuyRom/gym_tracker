@@ -60,6 +60,30 @@ export default function WorkoutPage() {
           setActiveSession(activeData.session);
           setSelectedDayId(activeData.session.workoutDayId);
 
+          // Restore AI Coach results from database for all exercises in this session
+          if (Array.isArray(activeData.session.exercises)) {
+            const restoredAi: Record<string, { reps: number; score: number }> = {};
+            activeData.session.exercises.forEach((se: any) => {
+              if (se.aiCoachSessions && se.aiCoachSessions.length > 0) {
+                const latest = se.aiCoachSessions[0];
+                restoredAi[se.exerciseId] = {
+                  reps: latest.totalReps,
+                  score: Math.round(latest.avgFormScore),
+                };
+              } else if (se.actualReps && typeof se.actualReps === 'string' && se.actualReps.includes('AI')) {
+                const repsMatch = se.actualReps.match(/(\d+)\s*reps/i);
+                const scoreMatch = se.actualReps.match(/AI(?:\s*Score)?\s*(\d+)%/i);
+                if (repsMatch) {
+                  restoredAi[se.exerciseId] = {
+                    reps: parseInt(repsMatch[1], 10),
+                    score: scoreMatch ? parseInt(scoreMatch[1], 10) : 85,
+                  };
+                }
+              }
+            });
+            setAiCoachResults(restoredAi);
+          }
+
           if (activeData.session.startedAt) {
             const started = new Date(activeData.session.startedAt).getTime();
             setElapsedSeconds(Math.max(0, Math.floor((Date.now() - started) / 1000)));
@@ -296,7 +320,17 @@ export default function WorkoutPage() {
       lower.includes('push-up') ||
       lower.includes('hít đất') ||
       lower.includes('deadlift') ||
-      lower.includes('rdl')
+      lower.includes('rdl') ||
+      lower.includes('lat pulldown') ||
+      lower.includes('kéo xô') ||
+      lower.includes('pulldown') ||
+      lower.includes('cable row') ||
+      lower.includes('chèo cáp') ||
+      lower.includes('seated row') ||
+      (lower.includes('kéo cáp') && !lower.includes('tay sau')) ||
+      lower.includes('lateral raise') ||
+      lower.includes('bay vai') ||
+      lower.includes('dang tạ')
     );
   };
 
@@ -729,6 +763,9 @@ export default function WorkoutPage() {
         isOpen={Boolean(selectedAiCoachExercise)}
         onClose={() => setSelectedAiCoachExercise(null)}
         exercise={selectedAiCoachExercise}
+        sessionExerciseId={
+          activeSession?.exercises?.find((se: any) => se.exerciseId === selectedAiCoachExercise?.id)?.id
+        }
         onSaveResult={(reps, score) => {
           if (selectedAiCoachExercise) {
             handleSaveAiCoachResult(selectedAiCoachExercise.id, reps, score);

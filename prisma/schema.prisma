@@ -109,6 +109,7 @@ model SessionExercise {
 
   session         WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   exercise        Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  aiCoachSessions AiCoachSession[]
 
   @@unique([sessionId, exerciseId])
   @@map("session_exercises")
@@ -128,20 +129,23 @@ model ScheduleActivityLog {
 }
 
 model AiCoachSession {
-  id              String   @id @default(cuid())
-  userId          String
-  exerciseType    String   // 'squat', 'bicep_curl', 'shoulder_press', 'pushup'
-  exerciseName    String
-  totalReps       Int
-  goodReps        Int
-  avgFormScore    Float
-  durationSec     Int
-  feedbackSummary String?  @db.Text
-  createdAt       DateTime @default(now())
+  id                String   @id @default(cuid())
+  userId            String
+  sessionExerciseId String?
+  exerciseType      String   // 'squat', 'bicep_curl', 'shoulder_press', 'pushup', 'lat_pulldown', 'cable_row', 'lateral_raise'
+  exerciseName      String
+  totalReps         Int
+  goodReps          Int
+  avgFormScore      Float
+  durationSec       Int
+  feedbackSummary   String?  @db.Text
+  createdAt         DateTime @default(now())
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionExercise   SessionExercise? @relation(fields: [sessionExerciseId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+  @@index([sessionExerciseId])
   @@map("ai_coach_sessions")
 }
 

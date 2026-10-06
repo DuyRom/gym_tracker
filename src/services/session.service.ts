@@ -22,6 +22,9 @@ export class SessionService {
         exercises: {
           include: {
             exercise: true,
+            aiCoachSessions: {
+              orderBy: { createdAt: 'desc' },
+            },
           },
         },
       },

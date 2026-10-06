@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Sliders,
   Compass,
+  Target,
 } from 'lucide-react';
 import {
   BiomechanicalTechniqueDetail,
@@ -37,7 +38,7 @@ export default function TechniqueDetailModal({
   onClose,
   exercise,
 }: TechniqueDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<'setup' | 'execution' | 'mistakes' | 'breathing'>('setup');
+  const [activeTab, setActiveTab] = useState<'purpose' | 'setup' | 'execution' | 'mistakes' | 'breathing'>('purpose');
 
   if (!isOpen || !exercise) return null;
 
@@ -154,6 +155,28 @@ export default function TechniqueDetailModal({
               paddingBottom: 2,
             }}
           >
+            <button
+              type="button"
+              onClick={() => setActiveTab('purpose')}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                border: 'none',
+                cursor: 'pointer',
+                background: activeTab === 'purpose' ? '#A855F7' : 'rgba(255, 255, 255, 0.06)',
+                color: activeTab === 'purpose' ? '#FFFFFF' : '#94A3B8',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Target size={14} /> Mục Đích
+            </button>
+
             <button
               type="button"
               onClick={() => setActiveTab('setup')}
@@ -277,6 +300,189 @@ export default function TechniqueDetailModal({
                   {exercise.techniqueNote}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB 0: MỤC ĐÍCH BÀI TẬP */}
+          {activeTab === 'purpose' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {detail?.exercisePurpose ? (
+                <>
+                  {/* Goal Card */}
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%)',
+                      borderRadius: 14,
+                      padding: 18,
+                      border: '1px solid rgba(168, 85, 247, 0.25)',
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: '#C084FC',
+                        marginBottom: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <Target size={16} /> MỤC ĐÍCH BÀI TẬP:
+                    </h3>
+                    <p style={{ fontSize: 14, color: '#F1F5F9', lineHeight: 1.7, margin: 0 }}>
+                      {detail.exercisePurpose.goal}
+                    </p>
+                  </div>
+
+                  {/* Target Muscles */}
+                  <div
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.5)',
+                      borderRadius: 14,
+                      padding: 18,
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: '#F59E0B',
+                        marginBottom: 14,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      💪 NHÓM CƠ MỤC TIÊU:
+                    </h3>
+
+                    {/* Primary */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 10px',
+                          borderRadius: 8,
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          color: '#F87171',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 8,
+                        }}
+                      >
+                        🎯 CƠ CHÍNH (Primary)
+                      </div>
+                      <div style={{ fontSize: 14, color: '#F1F5F9', fontWeight: 600, paddingLeft: 8 }}>
+                        {detail.exercisePurpose.primaryMuscleGroup}
+                      </div>
+                    </div>
+
+                    {/* Secondary */}
+                    <div>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 10px',
+                          borderRadius: 8,
+                          background: 'rgba(56, 189, 248, 0.12)',
+                          border: '1px solid rgba(56, 189, 248, 0.25)',
+                          color: '#38BDF8',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 8,
+                        }}
+                      >
+                        🔗 CƠ PHỤ (Secondary)
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 8 }}>
+                        {detail.exercisePurpose.secondaryMuscleGroups.map((m: string, i: number) => (
+                          <span
+                            key={i}
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: 8,
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#CBD5E1',
+                              fontSize: 12,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Movement Pattern + Benefit */}
+                  <div
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.5)',
+                      borderRadius: 14,
+                      padding: 18,
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                      <span
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 8,
+                          background: 'rgba(16, 185, 129, 0.15)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          color: '#34D399',
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ⚡ {detail.exercisePurpose.movementPattern}
+                      </span>
+                    </div>
+
+                    <h4 style={{ fontSize: 13, fontWeight: 700, color: '#10B981', marginBottom: 8 }}>
+                      LỢI ÍCH:
+                    </h4>
+                    <p style={{ fontSize: 13, color: '#E2E8F0', lineHeight: 1.6, margin: 0 }}>
+                      {detail.exercisePurpose.benefit}
+                    </p>
+                  </div>
+
+                  {/* Suitable For */}
+                  <div
+                    style={{
+                      padding: 14,
+                      borderRadius: 12,
+                      background: 'rgba(245, 158, 11, 0.08)',
+                      border: '1px solid rgba(245, 158, 11, 0.2)',
+                      display: 'flex',
+                      gap: 12,
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>👤</span>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 4 }}>
+                        PHÙ HỢP VỚI:
+                      </div>
+                      <div style={{ fontSize: 13, color: '#FDE68A', lineHeight: 1.5 }}>
+                        {detail.exercisePurpose.suitableFor}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 14, color: 'var(--text-dim)', textAlign: 'center', padding: '30px 0' }}>
+                  Chưa có thông tin mục đích cho bài tập này.
+                </div>
+              )}
             </div>
           )}
 

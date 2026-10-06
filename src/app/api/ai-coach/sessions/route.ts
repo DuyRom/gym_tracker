@@ -13,10 +13,17 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 50));
     const exerciseType = searchParams.get('exerciseType');
+    const sessionExerciseId = searchParams.get('sessionExerciseId');
+    const sessionId = searchParams.get('sessionId');
 
     const whereClause: any = { userId: user.id };
     if (exerciseType && exerciseType !== 'all') {
       whereClause.exerciseType = exerciseType;
+    }
+    if (sessionExerciseId) {
+      whereClause.sessionExerciseId = sessionExerciseId;
+    } else if (sessionId) {
+      whereClause.sessionExercise = { sessionId };
     }
 
     const [sessions, allUserSessions] = await Promise.all([
@@ -109,6 +116,7 @@ export async function POST(req: NextRequest) {
       avgFormScore,
       durationSec,
       feedbackSummary,
+      sessionExerciseId,
     } = body;
 
     if (!exerciseType || totalReps === undefined) {
@@ -118,6 +126,7 @@ export async function POST(req: NextRequest) {
     const session = await (prisma as any).aiCoachSession.create({
       data: {
         userId: user.id,
+        sessionExerciseId: sessionExerciseId || null,
         exerciseType: String(exerciseType),
         exerciseName: String(exerciseName || exerciseType),
         totalReps: Number(totalReps) || 0,
@@ -127,6 +136,21 @@ export async function POST(req: NextRequest) {
         feedbackSummary: feedbackSummary ? String(feedbackSummary) : null,
       },
     });
+
+    // If linked to a SessionExercise, automatically update its completed state and reps note
+    if (sessionExerciseId) {
+      try {
+        await (prisma as any).sessionExercise.update({
+          where: { id: sessionExerciseId },
+          data: {
+            completed: true,
+            actualReps: `${totalReps} reps (AI Score ${Math.round(avgFormScore || 0)}%)`,
+          },
+        });
+      } catch (linkErr) {
+        console.warn('Failed to update linked SessionExercise:', linkErr);
+      }
+    }
 
     return apiSuccess({ session }, {}, 201);
   } catch (error: any) {

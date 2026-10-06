@@ -154,4 +154,22 @@ export const EXERCISE_CONFIGS: Record<string, RepCounterConfig> = {
     hysteresis: 8,
     minRepDurationMs: 1100,
   },
+  lat_pulldown: {
+    upThreshold: 155,
+    downThreshold: 85,
+    hysteresis: 8,
+    minRepDurationMs: 1100,
+  },
+  cable_row: {
+    upThreshold: 150,
+    downThreshold: 85,
+    hysteresis: 8,
+    minRepDurationMs: 1100,
+  },
+  lateral_raise: {
+    upThreshold: 155,
+    downThreshold: 95,
+    hysteresis: 7,
+    minRepDurationMs: 1000,
+  },
 };

@@ -30,6 +30,9 @@ import {
   getPushupAngles,
   getDeadliftAngles,
   getLungeAngles,
+  getLatPulldownAngles,
+  getCableRowAngles,
+  getLateralRaiseAngles,
 } from '@/lib/ai-coach/angle-calculator';
 import { RepCounter, EXERCISE_CONFIGS } from '@/lib/ai-coach/rep-counter';
 import {
@@ -39,6 +42,9 @@ import {
   analyzePushupForm,
   analyzeDeadliftForm,
   analyzeLungeForm,
+  analyzeLatPulldownForm,
+  analyzeCableRowForm,
+  analyzeLateralRaiseForm,
   FormFeedback,
 } from '@/lib/ai-coach/form-analyzer';
 import { drawSkeleton } from '@/lib/ai-coach/skeleton-renderer';
@@ -61,7 +67,10 @@ type ExerciseKey =
   | 'shoulder_press'
   | 'pushup'
   | 'deadlift'
-  | 'lunge';
+  | 'lunge'
+  | 'lat_pulldown'
+  | 'cable_row'
+  | 'lateral_raise';
 
 interface ExerciseDef {
   key: ExerciseKey;
@@ -100,6 +109,33 @@ const EXERCISES: ExerciseDef[] = [
     targetJoint: 'Khớp vai & khuỷu tay',
     description: 'Đẩy tạ thẳng qua đầu, siết cơ vai ở đỉnh',
     idealDepth: 'Hạ ngang tai, đẩy thẳng tay qua đầu',
+  },
+  {
+    key: 'lat_pulldown',
+    nameVi: 'Lat Pulldown (Kéo Xô / Kéo Cáp Dọc)',
+    nameEn: 'Wide Lat Pulldown',
+    icon: '🦅',
+    targetJoint: 'Khớp vai & khuỷu tay',
+    description: 'Hơi ngả sau 10°-15°, kéo thanh đòn xuống xương quai xanh',
+    idealDepth: 'Kéo chạm xương quai xanh (~80°-85°)',
+  },
+  {
+    key: 'cable_row',
+    nameVi: 'Cable Row (Kéo Cáp Ngang / Chèo Cáp)',
+    nameEn: 'Seated Cable Row',
+    icon: '🚣‍♂️',
+    targetJoint: 'Khuỷu tay & lưng giữa',
+    description: 'Cố định thân người, kéo cùi chỏ ra sau siết hai bả vai',
+    idealDepth: 'Kéo cùi chỏ ra sau, siết bả vai (~80°-85°)',
+  },
+  {
+    key: 'lateral_raise',
+    nameVi: 'Lateral Raise (Dang Tạ Bay Vai)',
+    nameEn: 'Dumbbell Lateral Raise',
+    icon: '🕊️',
+    targetJoint: 'Khớp vai (Delts)',
+    description: 'Nâng hai tạ sang ngang đến khi cùi chỏ ngang vai',
+    idealDepth: 'Nâng khuỷu tay ngang vai (~85°-90°)',
   },
   {
     key: 'pushup',
@@ -351,6 +387,34 @@ export default function AiCoachPage() {
             backKneeAngle: angles.backKneeAngle,
             torsoAngle: angles.torsoAngle,
           });
+        } else if (selectedExercise === 'lat_pulldown') {
+          const angles = getLatPulldownAngles(keypoints);
+          primaryAngle = angles.primaryElbowAngle;
+          activeJointIndex =
+            angles.preferredSide === 'right' ? KEYPOINT_INDEX.RIGHT_ELBOW : KEYPOINT_INDEX.LEFT_ELBOW;
+          feedback = analyzeLatPulldownForm({
+            minElbowAngle: primaryAngle,
+            maxElbowAngle: primaryAngle,
+            symmetryDelta: angles.symmetryDelta,
+          });
+        } else if (selectedExercise === 'cable_row') {
+          const angles = getCableRowAngles(keypoints);
+          primaryAngle = angles.primaryElbowAngle;
+          activeJointIndex =
+            angles.preferredSide === 'right' ? KEYPOINT_INDEX.RIGHT_ELBOW : KEYPOINT_INDEX.LEFT_ELBOW;
+          feedback = analyzeCableRowForm({
+            minElbowAngle: primaryAngle,
+            maxElbowAngle: primaryAngle,
+            torsoAngle: angles.torsoAngle,
+          });
+        } else if (selectedExercise === 'lateral_raise') {
+          const angles = getLateralRaiseAngles(keypoints);
+          primaryAngle = angles.primaryAngle;
+          activeJointIndex = KEYPOINT_INDEX.LEFT_SHOULDER;
+          feedback = analyzeLateralRaiseForm({
+            abductionAvg: angles.abductionAvg,
+            symmetryDelta: angles.symmetryDelta,
+          });
         }
 
         setCurrentAngle(primaryAngle);
@@ -374,12 +438,24 @@ export default function AiCoachPage() {
                 ? 'HẠ TẠ'
                 : selectedExercise === 'deadlift'
                 ? 'HẠ HÔNG'
+                : selectedExercise === 'lat_pulldown'
+                ? 'KÉO XUỐNG'
+                : selectedExercise === 'cable_row'
+                ? 'KÉO VỀ SAU'
+                : selectedExercise === 'lateral_raise'
+                ? 'DANG TẠ LÊN'
                 : 'XUỐNG',
             UP:
               selectedExercise === 'shoulder_press'
                 ? 'ĐẨY LÊN'
                 : selectedExercise === 'deadlift'
                 ? 'KHÓA HÔNG'
+                : selectedExercise === 'lat_pulldown'
+                ? 'NHẢ TẠ'
+                : selectedExercise === 'cable_row'
+                ? 'DUỖI TAY'
+                : selectedExercise === 'lateral_raise'
+                ? 'HẠ TẠ'
                 : 'LÊN',
           };
           setRepPhaseText(phaseLabels[repResult.phase] || repResult.phase);

@@ -216,3 +216,87 @@ export function getLungeAngles(keypoints: Point2D[]) {
     isLeftFront,
   };
 }
+
+export function getLatPulldownAngles(keypoints: Point2D[]) {
+  const leftShoulder = keypoints[KEYPOINT_INDEX.LEFT_SHOULDER];
+  const leftElbow = keypoints[KEYPOINT_INDEX.LEFT_ELBOW];
+  const leftWrist = keypoints[KEYPOINT_INDEX.LEFT_WRIST];
+
+  const rightShoulder = keypoints[KEYPOINT_INDEX.RIGHT_SHOULDER];
+  const rightElbow = keypoints[KEYPOINT_INDEX.RIGHT_ELBOW];
+  const rightWrist = keypoints[KEYPOINT_INDEX.RIGHT_WRIST];
+
+  const elbowAngleL = calculateAngle(leftShoulder, leftElbow, leftWrist);
+  const elbowAngleR = calculateAngle(rightShoulder, rightElbow, rightWrist);
+
+  const leftScore = ((leftShoulder.score || 0) + (leftElbow.score || 0) + (leftWrist.score || 0)) / 3;
+  const rightScore = ((rightShoulder.score || 0) + (rightElbow.score || 0) + (rightWrist.score || 0)) / 3;
+  const preferredSide = rightScore > leftScore ? 'right' : 'left';
+
+  return {
+    primaryElbowAngle: Math.round(((elbowAngleL + elbowAngleR) / 2) * 10) / 10,
+    elbowAngleL,
+    elbowAngleR,
+    symmetryDelta: Math.abs(elbowAngleL - elbowAngleR),
+    preferredSide,
+  };
+}
+
+export function getCableRowAngles(keypoints: Point2D[]) {
+  const leftShoulder = keypoints[KEYPOINT_INDEX.LEFT_SHOULDER];
+  const leftElbow = keypoints[KEYPOINT_INDEX.LEFT_ELBOW];
+  const leftWrist = keypoints[KEYPOINT_INDEX.LEFT_WRIST];
+  const leftHip = keypoints[KEYPOINT_INDEX.LEFT_HIP];
+  const leftKnee = keypoints[KEYPOINT_INDEX.LEFT_KNEE];
+
+  const rightShoulder = keypoints[KEYPOINT_INDEX.RIGHT_SHOULDER];
+  const rightElbow = keypoints[KEYPOINT_INDEX.RIGHT_ELBOW];
+  const rightWrist = keypoints[KEYPOINT_INDEX.RIGHT_WRIST];
+  const rightHip = keypoints[KEYPOINT_INDEX.RIGHT_HIP];
+  const rightKnee = keypoints[KEYPOINT_INDEX.RIGHT_KNEE];
+
+  const elbowAngleL = calculateAngle(leftShoulder, leftElbow, leftWrist);
+  const elbowAngleR = calculateAngle(rightShoulder, rightElbow, rightWrist);
+  const torsoAngleL = calculateAngle(leftShoulder, leftHip, leftKnee);
+  const torsoAngleR = calculateAngle(rightShoulder, rightHip, rightKnee);
+
+  const leftScore = ((leftShoulder.score || 0) + (leftElbow.score || 0) + (leftWrist.score || 0)) / 3;
+  const rightScore = ((rightShoulder.score || 0) + (rightElbow.score || 0) + (rightWrist.score || 0)) / 3;
+  const preferredSide = rightScore > leftScore ? 'right' : 'left';
+
+  return {
+    primaryElbowAngle: preferredSide === 'right' ? elbowAngleR : elbowAngleL,
+    torsoAngle: preferredSide === 'right' ? torsoAngleR : torsoAngleL,
+    elbowAngleL,
+    elbowAngleR,
+    symmetryDelta: Math.abs(elbowAngleL - elbowAngleR),
+    preferredSide,
+  };
+}
+
+export function getLateralRaiseAngles(keypoints: Point2D[]) {
+  const leftHip = keypoints[KEYPOINT_INDEX.LEFT_HIP];
+  const leftShoulder = keypoints[KEYPOINT_INDEX.LEFT_SHOULDER];
+  const leftElbow = keypoints[KEYPOINT_INDEX.LEFT_ELBOW];
+
+  const rightHip = keypoints[KEYPOINT_INDEX.RIGHT_HIP];
+  const rightShoulder = keypoints[KEYPOINT_INDEX.RIGHT_SHOULDER];
+  const rightElbow = keypoints[KEYPOINT_INDEX.RIGHT_ELBOW];
+
+  const abductionAngleL = calculateAngle(leftHip, leftShoulder, leftElbow);
+  const abductionAngleR = calculateAngle(rightHip, rightShoulder, rightElbow);
+
+  // Inverted angle to match RepCounter threshold: arm by sides (~20°) -> ~160°, arm raised horizontal (~90°) -> ~90°
+  const effectiveAngleL = Math.max(0, 180 - abductionAngleL);
+  const effectiveAngleR = Math.max(0, 180 - abductionAngleR);
+  const primaryAngle = Math.round(((effectiveAngleL + effectiveAngleR) / 2) * 10) / 10;
+  const abductionAvg = Math.round(((abductionAngleL + abductionAngleR) / 2) * 10) / 10;
+
+  return {
+    primaryAngle,
+    abductionAvg,
+    abductionAngleL,
+    abductionAngleR,
+    symmetryDelta: Math.abs(abductionAngleL - abductionAngleR),
+  };
+}

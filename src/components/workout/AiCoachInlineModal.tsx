@@ -26,6 +26,9 @@ import {
   getPushupAngles,
   getDeadliftAngles,
   getLungeAngles,
+  getLatPulldownAngles,
+  getCableRowAngles,
+  getLateralRaiseAngles,
 } from '@/lib/ai-coach/angle-calculator';
 import { RepCounter, EXERCISE_CONFIGS } from '@/lib/ai-coach/rep-counter';
 import {
@@ -35,6 +38,9 @@ import {
   analyzePushupForm,
   analyzeDeadliftForm,
   analyzeLungeForm,
+  analyzeLatPulldownForm,
+  analyzeCableRowForm,
+  analyzeLateralRaiseForm,
   FormFeedback,
 } from '@/lib/ai-coach/form-analyzer';
 import { drawSkeleton } from '@/lib/ai-coach/skeleton-renderer';
@@ -57,7 +63,10 @@ export type AiExerciseKey =
   | 'shoulder_press'
   | 'pushup'
   | 'deadlift'
-  | 'lunge';
+  | 'lunge'
+  | 'lat_pulldown'
+  | 'cable_row'
+  | 'lateral_raise';
 
 interface ExerciseDef {
   key: AiExerciseKey;
@@ -94,6 +103,30 @@ export const AI_EXERCISES: ExerciseDef[] = [
     idealDepth: 'Hạ ngang tai, đẩy thẳng qua đầu',
   },
   {
+    key: 'lat_pulldown',
+    nameVi: 'Lat Pulldown (Kéo Xô / Kéo Cáp Dọc)',
+    nameEn: 'Wide Lat Pulldown',
+    icon: '🦅',
+    targetJoint: 'Khớp vai & khuỷu tay',
+    idealDepth: 'Kéo chạm xương quai xanh (~80°-85°)',
+  },
+  {
+    key: 'cable_row',
+    nameVi: 'Cable Row (Kéo Cáp Ngang / Chèo Cáp)',
+    nameEn: 'Seated Cable Row',
+    icon: '🚣‍♂️',
+    targetJoint: 'Khuỷu tay & lưng giữa',
+    idealDepth: 'Kéo cùi chỏ ra sau, siết bả vai (~80°-85°)',
+  },
+  {
+    key: 'lateral_raise',
+    nameVi: 'Lateral Raise (Dang Tạ Bay Vai)',
+    nameEn: 'Dumbbell Lateral Raise',
+    icon: '🕊️',
+    targetJoint: 'Khớp vai (Delts)',
+    idealDepth: 'Nâng khuỷu tay ngang vai (~85°-90°)',
+  },
+  {
     key: 'pushup',
     nameVi: 'Push-up (Hít Đất)',
     nameEn: 'Standard Push-up',
@@ -121,6 +154,20 @@ export const AI_EXERCISES: ExerciseDef[] = [
 
 export function mapExerciseNameToAiKey(name: string): AiExerciseKey {
   const lower = (name || '').toLowerCase();
+  if (lower.includes('lat pulldown') || lower.includes('kéo xô') || lower.includes('pulldown')) {
+    return 'lat_pulldown';
+  }
+  if (
+    lower.includes('cable row') ||
+    lower.includes('chèo cáp') ||
+    lower.includes('seated row') ||
+    (lower.includes('kéo cáp') && !lower.includes('dọc') && !lower.includes('tay sau'))
+  ) {
+    return 'cable_row';
+  }
+  if (lower.includes('lateral raise') || lower.includes('bay vai') || lower.includes('dang tạ')) {
+    return 'lateral_raise';
+  }
   if (lower.includes('goblet') || lower.includes('squat')) {
     if (lower.includes('split') || lower.includes('bulgarian') || lower.includes('lunge')) {
       return 'lunge';
@@ -184,6 +231,7 @@ interface AiCoachInlineModalProps {
     repsMax?: number;
     sets?: number;
   } | null;
+  sessionExerciseId?: string;
   onSaveResult: (reps: number, avgScore: number) => Promise<void> | void;
 }
 
@@ -191,6 +239,7 @@ export default function AiCoachInlineModal({
   isOpen,
   onClose,
   exercise,
+  sessionExerciseId,
   onSaveResult,
 }: AiCoachInlineModalProps) {
   const initialKey = exercise ? mapExerciseNameToAiKey(exercise.nameVi) : 'squat';
@@ -382,6 +431,34 @@ export default function AiCoachInlineModal({
             backKneeAngle: angles.backKneeAngle,
             torsoAngle: angles.torsoAngle,
           });
+        } else if (selectedExercise === 'lat_pulldown') {
+          const angles = getLatPulldownAngles(keypoints);
+          primaryAngle = angles.primaryElbowAngle;
+          activeJointIndex =
+            angles.preferredSide === 'right' ? KEYPOINT_INDEX.RIGHT_ELBOW : KEYPOINT_INDEX.LEFT_ELBOW;
+          feedback = analyzeLatPulldownForm({
+            minElbowAngle: primaryAngle,
+            maxElbowAngle: primaryAngle,
+            symmetryDelta: angles.symmetryDelta,
+          });
+        } else if (selectedExercise === 'cable_row') {
+          const angles = getCableRowAngles(keypoints);
+          primaryAngle = angles.primaryElbowAngle;
+          activeJointIndex =
+            angles.preferredSide === 'right' ? KEYPOINT_INDEX.RIGHT_ELBOW : KEYPOINT_INDEX.LEFT_ELBOW;
+          feedback = analyzeCableRowForm({
+            minElbowAngle: primaryAngle,
+            maxElbowAngle: primaryAngle,
+            torsoAngle: angles.torsoAngle,
+          });
+        } else if (selectedExercise === 'lateral_raise') {
+          const angles = getLateralRaiseAngles(keypoints);
+          primaryAngle = angles.primaryAngle;
+          activeJointIndex = KEYPOINT_INDEX.LEFT_SHOULDER;
+          feedback = analyzeLateralRaiseForm({
+            abductionAvg: angles.abductionAvg,
+            symmetryDelta: angles.symmetryDelta,
+          });
         }
 
         setCurrentAngle(primaryAngle);
@@ -405,12 +482,24 @@ export default function AiCoachInlineModal({
                 ? 'HẠ TẠ'
                 : selectedExercise === 'deadlift'
                 ? 'HẠ HÔNG'
+                : selectedExercise === 'lat_pulldown'
+                ? 'KÉO XUỐNG'
+                : selectedExercise === 'cable_row'
+                ? 'KÉO VỀ SAU'
+                : selectedExercise === 'lateral_raise'
+                ? 'DANG TẠ LÊN'
                 : 'XUỐNG',
             UP:
               selectedExercise === 'shoulder_press'
                 ? 'ĐẨY LÊN'
                 : selectedExercise === 'deadlift'
                 ? 'KHÓA HÔNG'
+                : selectedExercise === 'lat_pulldown'
+                ? 'NHẢ TẠ'
+                : selectedExercise === 'cable_row'
+                ? 'DUỖI TAY'
+                : selectedExercise === 'lateral_raise'
+                ? 'HẠ TẠ'
                 : 'LÊN',
           };
           setRepPhaseText(phaseLabels[repResult.phase] || repResult.phase);
@@ -462,6 +551,7 @@ export default function AiCoachInlineModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sessionExerciseId: sessionExerciseId || undefined,
           exerciseType: selectedExercise,
           exerciseName: exercise?.nameVi || selectedExercise,
           totalReps: repCount,

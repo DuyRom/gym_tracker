@@ -8,6 +8,14 @@ export interface BiomechanicalTechniqueDetail {
     primary: string;
     secondary: string | string[];
   };
+  exercisePurpose: {
+    goal: string;
+    primaryMuscleGroup: string;
+    secondaryMuscleGroups: string[];
+    movementPattern: string;
+    benefit: string;
+    suitableFor: string;
+  };
   equipmentSetup: {
     benchSetting?: string;
     cableSetting?: string;
@@ -47,6 +55,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ lưng rộng (Latissimus Dorsi)',
       secondary: 'Cơ quả trám (Rhomboids), Tay trước (Biceps), Cơ tròn lớn (Teres Major)',
+    },
+    exercisePurpose: {
+      goal: 'Phát triển độ rộng cơ lưng xô (lats), tạo hình chữ V cho phần thân trên. Đây là bài tập nền tảng xây dựng "cánh" lưng.',
+      primaryMuscleGroup: 'Cơ lưng rộng (Latissimus Dorsi)',
+      secondaryMuscleGroups: ['Cơ quả trám (Rhomboids)', 'Cơ tay trước (Biceps Brachii)', 'Cơ tròn lớn (Teres Major)', 'Cơ delta sau (Rear Delt)'],
+      movementPattern: 'Kéo dọc (Vertical Pull)',
+      benefit: 'Tăng sức mạnh kéo, cải thiện tư thế chống gù lưng, xây dựng cánh lưng rộng tạo tỉ lệ thẩm mỹ V-taper.',
+      suitableFor: 'Mọi cấp độ — người mới tập nên bắt đầu với tạ nhẹ để học cảm nhận cơ lưng.',
     },
     equipmentSetup: {
       cableSetting: 'Chốt ròng rọc ở vị trí cao nhất trên đỉnh máy.',
@@ -115,6 +131,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ lưng giữa, Cơ quả trám (Rhomboids), Cơ thang giữa/dưới (Middle/Lower Trapezius)',
       secondary: 'Cơ xô (Lats), Cơ delta sau (Rear Deltoid), Cẳng tay',
     },
+    exercisePurpose: {
+      goal: 'Xây dựng độ dày cho lưng giữa, tăng cường cơ quả trám và cơ thang. Bổ trợ cho tư thế thẳng lưng hàng ngày.',
+      primaryMuscleGroup: 'Cơ lưng giữa, Cơ quả trám (Rhomboids), Cơ thang giữa/dưới (Mid/Lower Traps)',
+      secondaryMuscleGroups: ['Cơ lưng rộng (Lats)', 'Cơ delta sau (Rear Deltoid)', 'Cơ tay trước (Biceps)', 'Cẳng tay (Forearms)'],
+      movementPattern: 'Kéo ngang (Horizontal Pull / Row)',
+      benefit: 'Phát triển chiều sâu (thickness) cho lưng, cải thiện sức mạnh kéo và ổn định bả vai, hỗ trợ phòng tránh đau vai.',
+      suitableFor: 'Mọi cấp độ — rất phù hợp người ngồi văn phòng nhiều cần cải thiện tư thế lưng.',
+    },
     equipmentSetup: {
       cableSetting: 'Chốt cáp ở ròng rọc thấp sát chân ghế.',
       attachment: 'Tay cầm V-Bar khép ngón đối diện (Neutral grip) hoặc thanh thẳng vừa.',
@@ -176,6 +200,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ tam đầu bắp tay sau - Đầu ngoài (Lateral Head) & Đầu giữa (Medial Head)',
       secondary: 'Đầu dài (Long Head), Cổ tay',
+    },
+    exercisePurpose: {
+      goal: 'Cô lập và phát triển cơ tam đầu bắp tay (triceps), đặc biệt đầu ngoài và đầu giữa. Tăng độ rõ nét cánh tay.',
+      primaryMuscleGroup: 'Cơ tam đầu (Triceps) — Đầu ngoài (Lateral Head) & Đầu giữa (Medial Head)',
+      secondaryMuscleGroups: ['Đầu dài Triceps (Long Head)', 'Cơ cổ tay (Wrist Flexors)'],
+      movementPattern: 'Đẩy duỗi (Push / Isolation Extension)',
+      benefit: 'Tăng kích thước cánh tay phía sau (triceps chiếm 2/3 chu vi cánh tay), hỗ trợ lực đẩy bench press và shoulder press.',
+      suitableFor: 'Mọi cấp độ — bài cô lập an toàn, dễ kiểm soát form cho người mới.',
     },
     equipmentSetup: {
       cableSetting: 'Ròng rọc cáp chốt ở nấc cao nhất trên đỉnh giàn.',
@@ -239,6 +271,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ vai sau (Rear Deltoid), Cơ chóp xoay (Infraspinatus & Teres Minor)',
       secondary: 'Cơ quả trám (Rhomboids), Cơ thang giữa/dưới, Cơ dựng sống cổ',
     },
+    exercisePurpose: {
+      goal: 'Tăng cường cơ delta sau và cơ xoay vai (rotator cuff), cân bằng lực đẩy/kéo cho vai khỏe mạnh. Là bài "bảo hiểm vai" quan trọng.',
+      primaryMuscleGroup: 'Cơ delta sau (Rear Deltoid), Cơ quả trám (Rhomboids)',
+      secondaryMuscleGroups: ['Cơ xoay vai (Rotator Cuff)', 'Cơ thang giữa (Mid Trapezius)', 'Cơ tròn nhỏ (Teres Minor)'],
+      movementPattern: 'Kéo ngang ra sau (Horizontal Pull / External Rotation)',
+      benefit: 'Phòng chống chấn thương vai, cân bằng giữa ngực trước và vai sau, cải thiện tư thế vai không bị cuộn vào trước.',
+      suitableFor: 'BẮT BUỘC cho mọi cấp độ — đặc biệt quan trọng nếu tập bench press và shoulder press thường xuyên.',
+    },
     equipmentSetup: {
       cableSetting: 'Chốt ròng rọc cáp ngang tầm mắt hoặc ngang trán (khoảng 1.5m–1.7m tùy chiều cao).',
       attachment: 'Dây thừng đôi (Rope). Nắm theo kiểu ngón tay cái hướng về phía mặt (Thumbs back grip).',
@@ -300,6 +340,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ ngực lớn (Toàn bộ thân ngực)',
       secondary: 'Cơ delta trước (Anterior Deltoid), Cơ tam đầu tay sau (Triceps)',
     },
+    exercisePurpose: {
+      goal: 'Phát triển khối lượng cơ ngực giữa (pectoralis major phần sternocostal), xây dựng lực đẩy ngang cho thân trên.',
+      primaryMuscleGroup: 'Cơ ngực lớn — Phần giữa (Mid Pectoralis Major)',
+      secondaryMuscleGroups: ['Cơ delta trước (Anterior Deltoid)', 'Cơ tam đầu (Triceps)', 'Cơ răng cưa trước (Serratus Anterior)'],
+      movementPattern: 'Đẩy ngang (Horizontal Press)',
+      benefit: 'Tăng khối cơ ngực, cải thiện lực đẩy, biên độ lớn hơn barbell press giúp kéo giãn cơ ngực tối đa.',
+      suitableFor: 'Mọi cấp độ — dumbbell cho phép mỗi tay hoạt động độc lập, tốt cho cân bằng trái/phải.',
+    },
     equipmentSetup: {
       benchSetting: 'Ghế nằm phẳng 180° so với mặt đất, đệm mút chắc chắn không trơn trượt.',
       padPosition: 'Bàn chân chạm hoàn toàn xuống sàn nhà, gót chân ấn chặt tạo lực đẩy (Leg Drive).',
@@ -360,6 +408,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ ngực trên (xương quai xanh)',
       secondary: 'Cơ delta trước (Front Delts), Tay sau (Triceps)',
     },
+    exercisePurpose: {
+      goal: 'Phát triển phần ngực trên (clavicular head), tạo hình ngực đầy đặn và rõ đường viền xương đòn.',
+      primaryMuscleGroup: 'Cơ ngực lớn — Phần trên (Upper/Clavicular Pectoralis Major)',
+      secondaryMuscleGroups: ['Cơ delta trước (Anterior Deltoid)', 'Cơ tam đầu (Triceps)', 'Cơ răng cưa trước (Serratus Anterior)'],
+      movementPattern: 'Đẩy chéo lên (Incline Press)',
+      benefit: 'Bổ sung cho ngực giữa/dưới, tạo hình ngực 3D cân đối. Ngực trên phát triển giúp ngực trông đầy và tròn hơn.',
+      suitableFor: 'Mọi cấp độ — ghế nghiêng 30-45° là tối ưu cho kích hoạt ngực trên.',
+    },
     equipmentSetup: {
       benchSetting: 'CHỈNH GÓC DỐC GHẾ TỪ 30° ĐẾN 45° (lý tưởng nhất là 30° - nấc thứ 2 hoặc 3 của ghế). Nếu chỉnh ghế quá 45°-60°, bài tập sẽ biến thành đẩy vai!',
       padPosition: 'Chỉnh đệm ngồi hơi dốc lên nhẹ (Incline seat pad) để tránh trượt mông ra trước khi cầm tạ nặng.',
@@ -419,6 +475,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ tứ đầu đùi (Quads), Cơ mông lớn (Gluteus Maximus)',
       secondary: 'Cơ khép đùi (Adductors), Cơ lõi (Core/Abs), Đùi sau (Hamstrings)',
+    },
+    exercisePurpose: {
+      goal: 'Phát triển cơ đùi trước và mông, cải thiện sức mạnh chức năng chân. Là biến thể squat thân thiện nhất cho người mới.',
+      primaryMuscleGroup: 'Cơ đùi trước (Quadriceps), Cơ mông lớn (Gluteus Maximus)',
+      secondaryMuscleGroups: ['Cơ đùi sau (Hamstrings)', 'Cơ lõi (Core)', 'Cơ thắt lưng (Erector Spinae)', 'Cơ bắp chân (Calves)'],
+      movementPattern: 'Squat (Gập gối - Hông đồng thời)',
+      benefit: 'Xây dựng sức mạnh toàn bộ chân, tăng cường cơ lõi, cải thiện mobility khớp hông và mắt cá.',
+      suitableFor: 'Lý tưởng cho người mới tập — ôm tạ trước ngực giúp giữ thăng bằng và học form squat đúng.',
     },
     equipmentSetup: {
       benchSetting: 'Không dùng ghế (hoặc dùng ghế bằng đặt phía sau làm cữ ngồi đo độ sâu nếu mới tập).',
@@ -485,6 +549,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ đùi trước (Quads), Cơ mông lớn (Glutes)',
       secondary: 'Cơ đùi sau, Bắp chuối, Cơ thăng bằng cơ lõi',
     },
+    exercisePurpose: {
+      goal: 'Phát triển sức mạnh đơn chân (unilateral), tăng cường mông và đùi trước, cải thiện thăng bằng và ổn định.',
+      primaryMuscleGroup: 'Cơ đùi trước (Quadriceps), Cơ mông lớn (Gluteus Maximus)',
+      secondaryMuscleGroups: ['Cơ đùi sau (Hamstrings)', 'Cơ lõi (Core)', 'Cơ hông stabilizers', 'Cơ bắp chân (Calves)'],
+      movementPattern: 'Chùng chân bước (Lunge / Split Stance)',
+      benefit: 'Cải thiện sức mạnh chân không đối xứng, tăng cường sự ổn định và coordination, tốt cho thể thao.',
+      suitableFor: 'Mọi cấp độ — bắt đầu với bodyweight, tăng dần cầm tạ đôi hai bên.',
+    },
     equipmentSetup: {
       padPosition: 'Không gian đi lại bằng phẳng dài từ 5m–10m hoặc tập tại chỗ.',
       distance: 'Độ dài bước chân: Bước một bước dài khoảng 2 đến 2.5 bàn chân sao cho khi hạ xuống, cả 2 đầu gối đều tạo góc khoảng 90°.',
@@ -544,6 +616,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ đùi sau (Hamstrings), Cơ mông lớn (Gluteus Maximus)',
       secondary: 'Cơ dựng gai cột sống (Erector Spinae), Lưng trên',
     },
+    exercisePurpose: {
+      goal: 'Phát triển chuỗi cơ sau (posterior chain): đùi sau, mông và lưng dưới. Cải thiện bản lề hông (hip hinge).',
+      primaryMuscleGroup: 'Cơ đùi sau (Hamstrings), Cơ mông lớn (Gluteus Maximus)',
+      secondaryMuscleGroups: ['Cơ thắt lưng (Erector Spinae)', 'Cơ lõi (Core)', 'Cơ bắp tay trước (Forearms)'],
+      movementPattern: 'Bản lề hông (Hip Hinge)',
+      benefit: 'Tăng sức mạnh chuỗi cơ sau giúp phòng tránh chấn thương lưng dưới, cải thiện hiệu suất thể thao (nhảy, chạy).',
+      suitableFor: 'Trung cấp trở lên — cần hiểu rõ pattern hip hinge. Người mới nên tập với tạ nhẹ hoặc bodyweight.',
+    },
     equipmentSetup: {
       padPosition: 'Đứng trên mặt sàn phẳng chắc chắn.',
       distance: 'Hai chân đứng rộng bằng hông, hai bàn chân song song hoặc hơi mở nhẹ 5°.',
@@ -602,6 +682,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ tứ đầu đùi (Quads), Cơ mông (Glutes)',
       secondary: 'Cơ khép, Đùi sau, Cơ dựng sống, Cơ bụng',
+    },
+    exercisePurpose: {
+      goal: 'Bài tập "vua" cho thân dưới — phát triển sức mạnh tổng thể chân, mông và core. Tăng lực compound toàn thân.',
+      primaryMuscleGroup: 'Cơ đùi trước (Quadriceps), Cơ mông lớn (Gluteus Maximus)',
+      secondaryMuscleGroups: ['Cơ đùi sau (Hamstrings)', 'Cơ thắt lưng (Erector Spinae)', 'Cơ lõi (Core)', 'Cơ bụng (Abdominals)'],
+      movementPattern: 'Squat compound (Multi-joint Squat)',
+      benefit: 'Bài compound mạnh nhất cho chân — kích thích phát triển testosterone, tăng sức mạnh toàn thân và mật độ xương.',
+      suitableFor: 'Trung cấp trở lên — cần vững form goblet squat trước khi chuyển sang barbell. Nên có spotter hoặc rack an toàn.',
     },
     equipmentSetup: {
       cableSetting: 'Thanh đòn đặt trên móc J-hooks ở chiều cao ngang nách/ngực trên (không đặt quá cao phải kiễng chân lấy tạ).',
@@ -664,6 +752,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ mông lớn (Gluteus Maximus), Cơ đùi trước (Quads)',
       secondary: 'Cơ khép đùi, Cơ bắp chân, Cơ thăng bằng',
     },
+    exercisePurpose: {
+      goal: 'Phát triển sức mạnh đơn chân nâng cao, kích hoạt mông sâu hơn squat thường. Giảm mất cân bằng chân trái/phải.',
+      primaryMuscleGroup: 'Cơ đùi trước (Quadriceps), Cơ mông lớn (Gluteus Maximus)',
+      secondaryMuscleGroups: ['Cơ đùi sau (Hamstrings)', 'Cơ hông (Hip Flexors)', 'Cơ lõi (Core)', 'Cơ cân bằng mắt cá (Ankle Stabilizers)'],
+      movementPattern: 'Squat đơn chân gác chân sau (Rear-Foot Elevated Split Squat)',
+      benefit: 'Kích hoạt cơ mông tốt hơn back squat, giảm tải cột sống, sửa mất cân bằng trái/phải hiệu quả.',
+      suitableFor: 'Trung cấp — cần thăng bằng tốt. Người mới bắt đầu với walking lunge trước khi chuyển sang Bulgarian.',
+    },
     equipmentSetup: {
       benchSetting: 'Ghế bằng phẳng chiều cao khoảng 35–45cm (ngang tầm dưới đầu gối).',
       distance: 'Đứng cách ghế khoảng 2 đến 3 bước chân. Mu bàn chân sau gác lên mặt đệm ghế.',
@@ -722,6 +818,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ delta giữa (Lateral Deltoid - Tạo độ rộng bờ vai)',
       secondary: 'Cơ cầu vai trên (Upper Trapezius), Cơ trên gai (Supraspinatus)',
+    },
+    exercisePurpose: {
+      goal: 'Cô lập và phát triển cơ delta giữa (middle deltoid), tạo hình vai rộng tròn. Là bài tạo "bề ngang" cho vai.',
+      primaryMuscleGroup: 'Cơ delta giữa (Middle/Lateral Deltoid)',
+      secondaryMuscleGroups: ['Cơ thang trên (Upper Trapezius)', 'Cơ trên gai (Supraspinatus)'],
+      movementPattern: 'Dang tay ngang (Lateral Abduction)',
+      benefit: 'Tạo hình vai rộng 3D, tăng tỉ lệ vai/eo (V-taper). Vai rộng là yếu tố thẩm mỹ quan trọng nhất cho nam.',
+      suitableFor: 'Mọi cấp độ — dùng tạ nhẹ, tập trung cảm nhận cơ delta giữa. Tạ nặng dễ gây dùng lực quán tính.',
     },
     equipmentSetup: {
       padPosition: 'Đứng thẳng hoặc ngồi trên mép ghế bằng.',
@@ -782,6 +886,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ cánh tay (Brachialis), Cơ cánh tay quay (Brachioradialis - cẳng tay)',
       secondary: 'Cơ nhị đầu bắp tay (Biceps Brachii)',
     },
+    exercisePurpose: {
+      goal: 'Phát triển cơ cánh tay trước (brachialis) và cơ cánh tay quay (brachioradialis), tạo bề dày cánh tay.',
+      primaryMuscleGroup: 'Cơ cánh tay (Brachialis), Cơ cánh tay quay (Brachioradialis)',
+      secondaryMuscleGroups: ['Cơ nhị đầu (Biceps Brachii)', 'Cẳng tay (Forearms)'],
+      movementPattern: 'Cuốn tay trung tính (Neutral Grip Curl)',
+      benefit: 'Phát triển bề dày cánh tay (nhìn từ cạnh), bổ sung cho bicep curl truyền thống. Tăng sức cầm nắm.',
+      suitableFor: 'Mọi cấp độ — tay trung tính (lòng bàn tay hướng vào nhau) giảm áp lực khớp cổ tay.',
+    },
     equipmentSetup: {
       weightSelectionAdvice: 'Chọn mức tạ bạn có thể cuốn mà không cần ngả người ra sau lấy đà.',
     },
@@ -833,6 +945,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ nhị đầu bắp tay trước - Đầu ngắn và đầu dài (Biceps Short & Long Head)',
       secondary: 'Cơ cẳng tay',
+    },
+    exercisePurpose: {
+      goal: 'Phát triển khối lượng cơ nhị đầu bắp tay (biceps brachii), tăng đỉnh cơ tay trước.',
+      primaryMuscleGroup: 'Cơ nhị đầu (Biceps Brachii)',
+      secondaryMuscleGroups: ['Cơ cánh tay (Brachialis)', 'Cơ cánh tay quay (Brachioradialis)', 'Cẳng tay (Forearms)'],
+      movementPattern: 'Cuốn tay (Elbow Flexion / Curl)',
+      benefit: 'Barbell cho phép tải nặng hơn dumbbell, kích thích phát triển biceps tối đa. Bài tập kinh điển cho cánh tay.',
+      suitableFor: 'Mọi cấp độ — EZ-bar giảm stress khớp cổ tay so với straight barbell.',
     },
     equipmentSetup: {
       attachment: 'Khuyến khích dùng đòn EZ-Bar vì góc uốn cong giúp giảm áp lực xoắn lên khớp cổ tay.',
@@ -886,6 +1006,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Đầu dài cơ tam đầu bắp tay sau (Long Head - bó cơ lớn nhất của tay sau)',
       secondary: 'Cơ vai, Cơ lõi',
+    },
+    exercisePurpose: {
+      goal: 'Kéo giãn và phát triển đầu dài (long head) cơ tam đầu — phần tạo "khối" lớn nhất cho cánh tay sau.',
+      primaryMuscleGroup: 'Cơ tam đầu — Đầu dài (Triceps Long Head)',
+      secondaryMuscleGroups: ['Đầu ngoài Triceps (Lateral Head)', 'Đầu giữa Triceps (Medial Head)', 'Cơ vai (Stabilizers)'],
+      movementPattern: 'Duỗi tay qua đầu (Overhead Extension)',
+      benefit: 'Kéo giãn đầu dài triceps ở tư thế overhead tạo stimulus mạnh hơn pushdown, phát triển chiều dài và khối cho cánh tay.',
+      suitableFor: 'Mọi cấp độ — cần mobility vai đủ tốt. Nếu đau vai khi giơ tay qua đầu, nên tập pushdown thay thế.',
     },
     equipmentSetup: {
       cableSetting: 'Chốt ròng rọc cáp ở tầm ngang ngực hoặc tầm thấp.',
@@ -942,6 +1070,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Toàn bộ nhóm cơ gân kheo đùi sau (Biceps Femoris, Semitendinosus, Semimembranosus)',
       secondary: 'Bắp chuối (Gastrocnemius)',
     },
+    exercisePurpose: {
+      goal: 'Cô lập và phát triển cơ đùi sau (hamstrings), cân bằng tỉ lệ đùi trước/sau cho chân khỏe mạnh.',
+      primaryMuscleGroup: 'Cơ đùi sau (Hamstrings) — Biceps Femoris, Semitendinosus, Semimembranosus',
+      secondaryMuscleGroups: ['Cơ bắp chân (Gastrocnemius)', 'Cơ khoeo (Popliteus)'],
+      movementPattern: 'Gập gối cô lập (Knee Flexion / Isolation)',
+      benefit: 'Giảm nguy cơ rách ACL và chấn thương đùi sau. Cân bằng tỉ lệ Q:H (quadriceps:hamstring) lý tưởng 3:2.',
+      suitableFor: 'Mọi cấp độ — máy leg curl an toàn, dễ kiểm soát. Quan trọng cho ai tập squat/leg press nặng.',
+    },
     equipmentSetup: {
       padPosition: 'Chỉnh con lăn đệm chân tì ngay dưới bắp chuối, ngay TRÊN gân gót Achilles khoảng 2-3cm. Tuyệt đối không để con lăn đè lên gót chân hoặc khớp mắt cá.',
       benchSetting: 'Nếu máy nằm: Chỉnh bản lề quay của máy thẳng hàng với trục khớp gối của bạn. Nếu máy ngồi: Chỉnh đệm đùi ép chặt xuống để khóa đùi không bị nhấc lên.',
@@ -996,6 +1132,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ bụng chân bắp chuối (Gastrocnemius), Cơ dép (Soleus)',
       secondary: 'Gân gót chân (Achilles Tendon)',
     },
+    exercisePurpose: {
+      goal: 'Phát triển cơ bắp chân (gastrocnemius), tạo hình cẳng chân săn chắc và tăng sức mạnh nhón chân.',
+      primaryMuscleGroup: 'Cơ bụng chân (Gastrocnemius) — Đầu trong & Đầu ngoài',
+      secondaryMuscleGroups: ['Cơ dép (Soleus)', 'Cơ chày sau (Tibialis Posterior)'],
+      movementPattern: 'Nhón chân (Plantar Flexion)',
+      benefit: 'Cải thiện sức bật, ổn định mắt cá chân, tăng sức bền chạy và nhảy. Bắp chân phát triển giúp chân cân đối.',
+      suitableFor: 'Mọi cấp độ — cần biên độ đầy đủ (hạ gót thấp hết cỡ, nhón cao hết cỡ) mới hiệu quả.',
+    },
     equipmentSetup: {
       padPosition: 'Đứng nửa bàn chân trước (Ball of foot) lên mép bục, để gót chân tự do lơ lửng ngoài mép bục.',
       weightSelectionAdvice: 'Tập trung vào biên độ chuyển động cực đại (Full ROM) thay vì tạ quá nặng nhấp nhấp.',
@@ -1047,6 +1191,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ thẳng bụng dưới (Rectus Abdominis), Cơ gập hông (Iliopsoas)',
       secondary: 'Cơ liên sườn (Obliques), Cơ xô và cẳng tay bám xà',
+    },
+    exercisePurpose: {
+      goal: 'Phát triển cơ bụng dưới và cơ gập hông, tăng cường sức mạnh core chức năng.',
+      primaryMuscleGroup: 'Cơ thẳng bụng — Phần dưới (Lower Rectus Abdominis)',
+      secondaryMuscleGroups: ['Cơ gập hông (Hip Flexors / Iliopsoas)', 'Cơ chéo bụng (Obliques)', 'Lực cầm nắm (Grip Strength)'],
+      movementPattern: 'Gập hông treo (Hanging Hip Flexion)',
+      benefit: 'Bài bụng hiệu quả nhất theo EMG studies, kéo giãn cột sống khi treo người, phát triển core chức năng.',
+      suitableFor: 'Trung cấp — cần đủ sức cầm nắm treo tối thiểu 30 giây. Người mới có thể dùng Captain Chair thay thế.',
     },
     equipmentSetup: {
       attachment: 'Xà đơn độ cao vừa tầm với.',
@@ -1105,6 +1257,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
       primary: 'Cơ bụng ngang (Transverse Abdominis), Cơ thẳng bụng, Cơ mông',
       secondary: 'Cơ delta trước, Cơ đùi trước, Lưng trên',
     },
+    exercisePurpose: {
+      goal: 'Tăng cường toàn bộ hệ thống cơ lõi (core): bụng, lưng dưới, hông. Cải thiện ổn định trung tâm cơ thể.',
+      primaryMuscleGroup: 'Cơ thẳng bụng (Rectus Abdominis), Cơ ngang bụng (Transverse Abdominis)',
+      secondaryMuscleGroups: ['Cơ chéo bụng (Obliques)', 'Cơ thắt lưng (Erector Spinae)', 'Cơ mông (Glutes)', 'Cơ vai (Deltoids)'],
+      movementPattern: 'Giữ tĩnh (Isometric Hold / Anti-Extension)',
+      benefit: 'Phiên bản RKC căng thẳng toàn thân tối đa — hiệu quả gấp 2x plank thường. Bảo vệ cột sống và cải thiện tư thế.',
+      suitableFor: 'Mọi cấp độ — 20-30 giây RKC Plank đúng form = 60 giây plank thường. Mục tiêu siết chặt mọi cơ trên cơ thể.',
+    },
     equipmentSetup: {
       padPosition: 'Trải thảm êm ái dưới hai cùi chỏ.',
     },
@@ -1161,6 +1321,14 @@ export const EXERCISE_TECHNIQUE_DETAILS: Record<string, BiomechanicalTechniqueDe
     targetMuscles: {
       primary: 'Cơ ngực lớn (Pectoralis Major)',
       secondary: 'Cơ tam đầu tay sau (Triceps), Cơ delta trước, Cơ lõi (Core)',
+    },
+    exercisePurpose: {
+      goal: 'Bài tập đẩy bodyweight kinh điển — phát triển ngực, vai trước và triceps mà không cần thiết bị.',
+      primaryMuscleGroup: 'Cơ ngực lớn (Pectoralis Major), Cơ tam đầu (Triceps)',
+      secondaryMuscleGroups: ['Cơ delta trước (Anterior Deltoid)', 'Cơ lõi (Core)', 'Cơ răng cưa trước (Serratus Anterior)'],
+      movementPattern: 'Đẩy ngang bodyweight (Horizontal Press)',
+      benefit: 'Bài tập chức năng tốt nhất, tập được mọi nơi không cần dụng cụ. Tăng sức mạnh đẩy và ổn định core.',
+      suitableFor: 'Mọi cấp độ — người mới có thể bắt đầu với hít đất trên tường hoặc ghế nghiêng cao.',
     },
     equipmentSetup: {
       padPosition: 'Mặt sàn phẳng không trơn trượt.',

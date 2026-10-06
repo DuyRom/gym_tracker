@@ -239,3 +239,131 @@ export function analyzeLungeForm(data: {
     tips: tips.slice(0, 2),
   };
 }
+
+export function analyzeLatPulldownForm(data: {
+  minElbowAngle: number;
+  maxElbowAngle: number;
+  symmetryDelta: number;
+}): FormFeedback {
+  let score = 100;
+  const tips: string[] = [];
+
+  // Bottom pull depth (pull down to upper chest)
+  if (data.minElbowAngle > 92) {
+    score -= 25;
+    tips.push('Chưa kéo đủ sâu — kéo thanh đòn xuống sát ngang cằm/xương quai xanh');
+  } else if (data.minElbowAngle <= 78) {
+    tips.push('Độ co cơ lưng xô tuyệt vời!');
+  }
+
+  // Top stretch extension
+  if (data.maxElbowAngle < 148) {
+    score -= 20;
+    tips.push('Nhả tạ duỗi thẳng tay hơn để giãn hoàn toàn cơ lưng xô');
+  }
+
+  // Symmetry
+  if (data.symmetryDelta > 18) {
+    score -= 15;
+    tips.push('Hai tay kéo lực chưa đều, giữ cân bằng thanh đòn');
+  }
+
+  const isGoodRep = score >= 75;
+  let statusText = 'Kéo xô rất chuẩn! 🦅';
+  if (score < 60) {
+    statusText = 'Biên độ chưa trọn vẹn ⚠️';
+  } else if (score < 75) {
+    statusText = 'Tốt, chú ý kéo sâu về ngực 👍';
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    isGoodRep,
+    statusText,
+    tips: tips.slice(0, 2),
+  };
+}
+
+export function analyzeCableRowForm(data: {
+  minElbowAngle: number;
+  maxElbowAngle: number;
+  torsoAngle: number;
+}): FormFeedback {
+  let score = 100;
+  const tips: string[] = [];
+
+  // Pull back contraction
+  if (data.minElbowAngle > 90) {
+    score -= 25;
+    tips.push('Kéo cùi chỏ ra sau nhiều hơn, siết chặt hai bả vai');
+  } else {
+    tips.push('Độ siết lưng giữa rất tốt!');
+  }
+
+  // Forward stretch
+  if (data.maxElbowAngle < 142) {
+    score -= 20;
+    tips.push('Thả tay về phía trước nhiều hơn để giãn cơ lưng');
+  }
+
+  // Torso swinging / excessive lean
+  if (data.torsoAngle < 65 || data.torsoAngle > 118) {
+    score -= 20;
+    tips.push('Hạn chế ngả đu người lấy đà — cố định thân trên vuông góc sàn');
+  }
+
+  const isGoodRep = score >= 75;
+  let statusText = 'Chèo cáp chắc chắn! 🚣‍♂️';
+  if (score < 60) {
+    statusText = 'Tránh đu người giật tạ ⚠️';
+  } else if (score < 75) {
+    statusText = 'Khá tốt, hãy kéo sâu cùi chỏ 👍';
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    isGoodRep,
+    statusText,
+    tips: tips.slice(0, 2),
+  };
+}
+
+export function analyzeLateralRaiseForm(data: {
+  abductionAvg: number;
+  symmetryDelta: number;
+}): FormFeedback {
+  let score = 100;
+  const tips: string[] = [];
+
+  // Height / elevation (~80°-95°)
+  if (data.abductionAvg < 75) {
+    score -= 25;
+    tips.push('Chưa nâng đủ cao — nâng khuỷu tay ngang vai (~85°-90°)');
+  } else if (data.abductionAvg > 105) {
+    score -= 20;
+    tips.push('Không nâng quá cao qua vai để tránh ăn vào cơ cầu vai');
+  } else {
+    tips.push('Độ cao ngang vai chuẩn xác!');
+  }
+
+  // Symmetry
+  if (data.symmetryDelta > 16) {
+    score -= 15;
+    tips.push('Hai tay dang chưa đều, đồng bộ nhịp độ hai bên');
+  }
+
+  const isGoodRep = score >= 75;
+  let statusText = 'Dang vai rất đẹp! 🕊️';
+  if (score < 60) {
+    statusText = 'Biên độ chưa chuẩn ⚠️';
+  } else if (score < 75) {
+    statusText = 'Tốt, chú ý nâng ngang vai 👍';
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    isGoodRep,
+    statusText,
+    tips: tips.slice(0, 2),
+  };
+}
