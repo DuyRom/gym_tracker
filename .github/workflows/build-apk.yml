@@ -2,8 +2,24 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main ]
+    # Không chạy CI khi chỉ thay đổi tài liệu, Docker hoặc config VPS
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - 'server/**'
+      - 'compose*.yml'
+      - 'common.yml'
+      - 'prod.yml'
+      - 'start.sh'
+      - 'Dockerfile'
+      - '.dockerignore'
   workflow_dispatch:
+
+# Tự động hủy build cũ nếu push commit mới liên tiếp (tiết kiệm số phút GitHub Free)
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-apk:
@@ -41,8 +57,14 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --stacktrace
 
+      # Tối ưu bộ nhớ GitHub Free:
+      # 1. retention-days: 2 -> Tự động xóa file sau 2 ngày để không chạm trần 500MB quota.
+      # 2. compression-level: 9 -> Nén tối đa dung lượng artifact.
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: GymTracker-Debug-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 2
+          compression-level: 9
