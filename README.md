@@ -22,8 +22,12 @@ Hỗ trợ đa nền tảng: **Web Browser**, **PWA (iOS/Safari & Desktop)**, v�
 2. **🤖 AI Computer Vision Coach (MoveNet Lightning & TensorFlow.js):**
    - Phân tích video camera trực tiếp on-device qua WebGL (không cần GPU server, bảo mật 100%).
    - **Đếm Reps Tự Động:** Thuật toán State Machine nhận diện chu kỳ chuyển động kèm bộ lọc Hysteresis chống rung giật.
-   - **Chấm Điểm & Sửa Form Thời Gian Thực:** Đánh giá góc gập khớp gối, khớp hông, cùi chỏ cho Squat, Bicep Curl, Shoulder Press, Push-up.
+   - **Thư Viện 6 Bài Tập Hỗ Trợ:** Squat, Bicep Curl, Shoulder Press, Push-up, Deadlift, Lunge.
+   - **Chấm Điểm & Sửa Form Thời Gian Thực:** Đánh giá góc gập khớp gối, hông, lưng, cùi chỏ và tính đối xứng.
+   - **🎙️ Voice Coach (Text-to-Speech):** AI phát âm tiếng Việt nhắc nhở form trực tiếp khi tập và chúc mừng khi đạt mốc reps.
    - **HUD Trực Quan & Phản Hồi Xúc Giác:** Khung xương Skeleton vẽ trên Canvas, hiển thị góc khớp real-time, rung Haptic và âm thanh khi hoàn thành rep.
+   - **📊 AI Analytics:** Biểu đồ xu hướng điểm form (Form Score Trend) và phân bổ reps chuẩn trên trang Phân Tích (`/analytics`).
+   - **⚡ Offline Model Caching:** Service Worker tự động cache weights mô hình AI để mở tức thì ngay cả khi offline.
    - **Lưu Trữ Buổi Tập:** Tự động tổng kết số reps chuẩn, điểm form trung bình và lưu vào Database.
 
 3. **📱 Native Android Experience (Capacitor):**
@@ -115,6 +119,8 @@ Hỗ trợ đa nền tảng: **Web Browser**, **PWA (iOS/Safari & Desktop)**, v�
 | `GET` | `/api/v1/users` | Danh sách thành viên (Admin) | Bearer Token hoặc Cookie |
 | `GET` | `/api/v1/ai-coach/sessions` | Lịch sử các buổi tập với AI Coach | Bearer Token hoặc Cookie |
 | `POST` | `/api/v1/ai-coach/sessions` | Lưu kết quả buổi tập AI Coach (reps, form score) | Bearer Token hoặc Cookie |
+
+> 📖 **Xem hướng dẫn chi tiết & mẫu cURL cho từng endpoint tại:** [API_WALKTHROUGH.md](API_WALKTHROUGH.md)
 
 ---
 

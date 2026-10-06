@@ -16,6 +16,8 @@ import {
   ArrowLeft,
   Volume2,
   VolumeX,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
@@ -26,6 +28,8 @@ import {
   getBicepCurlAngles,
   getShoulderPressAngles,
   getPushupAngles,
+  getDeadliftAngles,
+  getLungeAngles,
 } from '@/lib/ai-coach/angle-calculator';
 import { RepCounter, EXERCISE_CONFIGS } from '@/lib/ai-coach/rep-counter';
 import {
@@ -33,6 +37,8 @@ import {
   analyzeBicepCurlForm,
   analyzeShoulderPressForm,
   analyzePushupForm,
+  analyzeDeadliftForm,
+  analyzeLungeForm,
   FormFeedback,
 } from '@/lib/ai-coach/form-analyzer';
 import { drawSkeleton } from '@/lib/ai-coach/skeleton-renderer';
@@ -41,6 +47,7 @@ import {
   detectPose,
   disposePoseDetector,
 } from '@/lib/ai-coach/pose-detector';
+import { voiceCoach } from '@/lib/ai-coach/voice-coach';
 import { hapticSuccess, hapticImpact } from '@/lib/native-bridge';
 
 // Dynamic import CameraView to avoid SSR issues
@@ -48,7 +55,13 @@ const CameraView = dynamic(() => import('@/components/ai-coach/CameraView'), {
   ssr: false,
 });
 
-type ExerciseKey = 'squat' | 'bicep_curl' | 'shoulder_press' | 'pushup';
+type ExerciseKey =
+  | 'squat'
+  | 'bicep_curl'
+  | 'shoulder_press'
+  | 'pushup'
+  | 'deadlift'
+  | 'lunge';
 
 interface ExerciseDef {
   key: ExerciseKey;
@@ -97,6 +110,24 @@ const EXERCISES: ExerciseDef[] = [
     description: 'Thân người tạo đường thẳng, hạ ngực sát sàn',
     idealDepth: 'Khuỷu tay gập ~90°, lưng không võng',
   },
+  {
+    key: 'deadlift',
+    nameVi: 'Deadlift (Kéo Tạ Đất)',
+    nameEn: 'Conventional / Romanian Deadlift',
+    icon: '🔥',
+    targetJoint: 'Khớp hông & lưng dưới',
+    description: 'Bản lề hông (Hip hinge), đẩy mông về sau, giữ thẳng lưng',
+    idealDepth: 'Gập hông ~90°-100°, khóa hông ở đỉnh',
+  },
+  {
+    key: 'lunge',
+    nameVi: 'Lunge (Bước Chùng Chân)',
+    nameEn: 'Walking / Static Lunge',
+    icon: '🦵',
+    targetJoint: 'Khớp gối & hông trước sau',
+    description: 'Bước một chân lên trước, hạ gối sau gần sát sàn',
+    idealDepth: 'Gối trước vuông góc 90°, thân thẳng đứng',
+  },
 ];
 
 // Simple Web Audio API Synthesizer for instant audible feedback
@@ -124,6 +155,7 @@ export default function AiCoachPage() {
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   // Live Tracking States
   const [repCount, setRepCount] = useState(0);
@@ -184,6 +216,9 @@ export default function AiCoachPage() {
       setSessionStartTime(Date.now());
       setIsSessionActive(true);
       hapticImpact();
+      if (voiceEnabled && voiceCoach) {
+        voiceCoach.speak('Bắt đầu buổi tập. Hãy sẵn sàng!', true);
+      }
     } catch (err) {
       console.error('Failed to init MoveNet detector:', err);
       alert('Không thể tải mô hình AI MoveNet. Vui lòng kiểm tra kết nối mạng.');
@@ -195,6 +230,9 @@ export default function AiCoachPage() {
   const stopSession = () => {
     setIsSessionActive(false);
     setShowSummaryModal(true);
+    if (voiceEnabled && voiceCoach) {
+      voiceCoach.speak(`Buổi tập hoàn thành! Bạn đã hoàn thành ${repCount} reps.`, true);
+    }
     if (repCount > 0) {
       confetti({
         particleCount: 60,
@@ -289,10 +327,39 @@ export default function AiCoachPage() {
             minElbowAngle: primaryAngle,
             bodyLineAngle: angles.bodyLineAngle,
           });
+        } else if (selectedExercise === 'deadlift') {
+          const angles = getDeadliftAngles(keypoints);
+          primaryAngle = angles.primaryHipAngle;
+          activeJointIndex =
+            angles.preferredSide === 'right'
+              ? KEYPOINT_INDEX.RIGHT_HIP
+              : KEYPOINT_INDEX.LEFT_HIP;
+
+          feedback = analyzeDeadliftForm({
+            hipAngle: primaryAngle,
+            kneeAngle: angles.primaryKneeAngle,
+          });
+        } else if (selectedExercise === 'lunge') {
+          const angles = getLungeAngles(keypoints);
+          primaryAngle = angles.primaryKneeAngle;
+          activeJointIndex = angles.isLeftFront
+            ? KEYPOINT_INDEX.LEFT_KNEE
+            : KEYPOINT_INDEX.RIGHT_KNEE;
+
+          feedback = analyzeLungeForm({
+            frontKneeAngle: angles.frontKneeAngle,
+            backKneeAngle: angles.backKneeAngle,
+            torsoAngle: angles.torsoAngle,
+          });
         }
 
         setCurrentAngle(primaryAngle);
         setFormFeedback(feedback);
+
+        // Real-time voice coaching if form requires attention
+        if (voiceEnabled && voiceCoach && !feedback.isGoodRep && feedback.tips.length > 0) {
+          voiceCoach.speakFormCorrection(feedback.tips[0]);
+        }
 
         // 2. Feed angle to RepCounter State Machine
         if (repCounterRef.current) {
@@ -302,8 +369,18 @@ export default function AiCoachPage() {
 
           const phaseLabels: Record<string, string> = {
             READY: 'SẴN SÀNG',
-            DOWN: selectedExercise === 'shoulder_press' ? 'HẠ TẠ' : 'XUỐNG',
-            UP: selectedExercise === 'shoulder_press' ? 'ĐẨY LÊN' : 'LÊN',
+            DOWN:
+              selectedExercise === 'shoulder_press'
+                ? 'HẠ TẠ'
+                : selectedExercise === 'deadlift'
+                ? 'HẠ HÔNG'
+                : 'XUỐNG',
+            UP:
+              selectedExercise === 'shoulder_press'
+                ? 'ĐẨY LÊN'
+                : selectedExercise === 'deadlift'
+                ? 'KHÓA HÔNG'
+                : 'LÊN',
           };
           setRepPhaseText(phaseLabels[repResult.phase] || repResult.phase);
 
@@ -312,6 +389,9 @@ export default function AiCoachPage() {
             hapticSuccess();
             if (soundEnabled) {
               playBeep(980, 'sine', 0.18);
+            }
+            if (voiceEnabled && voiceCoach) {
+              voiceCoach.speakRepMilestone(repResult.count);
             }
             if (feedback.isGoodRep) {
               setGoodRepsCount((prev) => prev + 1);
@@ -335,7 +415,7 @@ export default function AiCoachPage() {
         isDetectingRef.current = false;
       }
     },
-    [isSessionActive, selectedExercise, facingMode, soundEnabled]
+    [isSessionActive, selectedExercise, facingMode, soundEnabled, voiceEnabled]
   );
 
   // Clean up MoveNet on unmount
@@ -405,23 +485,42 @@ export default function AiCoachPage() {
           <span>Trang chủ</span>
         </Link>
         <div className="flex items-center gap-2">
+          {/* Voice Coach Guidance Toggle */}
+          <button
+            onClick={() => {
+              const nextVal = !voiceEnabled;
+              setVoiceEnabled(nextVal);
+              if (voiceCoach) voiceCoach.setEnabled(nextVal);
+            }}
+            className={`p-2 rounded-xl border transition-colors ${
+              voiceEnabled
+                ? 'bg-sky-950/80 border-sky-600 text-sky-400 shadow-sm shadow-sky-500/20'
+                : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-300'
+            }`}
+            title={voiceEnabled ? 'Tắt giọng nói AI nhắc form' : 'Bật giọng nói AI nhắc form'}
+            type="button"
+          >
+            {voiceEnabled ? <Mic size={16} /> : <MicOff size={16} />}
+          </button>
+
+          {/* Sound Beep Toggle */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-sky-400 transition-colors"
-            title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+            title={soundEnabled ? 'Tắt âm thanh bíp' : 'Bật âm thanh bíp'}
             type="button"
           >
             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-950/60 border border-sky-800/60 text-sky-400 text-xs font-bold">
             <Sparkles size={13} className="text-sky-400 animate-pulse" />
-            <span>AI Computer Vision Coach</span>
+            <span>AI Vision Studio</span>
           </div>
         </div>
       </div>
 
-      {/* Exercise Selector Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+      {/* Exercise Selector Tabs - 6 Exercises Responsive Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
         {EXERCISES.map((ex) => {
           const isSelected = selectedExercise === ex.key;
           return (

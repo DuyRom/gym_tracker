@@ -1,4 +1,5 @@
-const CACHE_NAME = 'gym-tracker-v2.3';
+const CACHE_NAME = 'gym-tracker-v2.4';
+const MODEL_CACHE_NAME = 'gym-tracker-ai-models-v1';
 
 const STATIC_ASSETS = [
   '/',
@@ -19,7 +20,12 @@ const STATIC_ASSETS = [
   '/images/face_pull_form.jpg',
   '/images/seated_row_form.jpg',
   '/images/tricep_pushdown_form.jpg',
-  '/images/bicep_curl_form.jpg'
+  '/images/bicep_curl_form.jpg',
+  '/ai-coach',
+  '/analytics',
+  '/workout',
+  '/schedule',
+  '/history'
 ];
 
 // Install Event: Pre-cache static assets
@@ -36,7 +42,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys
+          .filter((key) => key !== CACHE_NAME && key !== MODEL_CACHE_NAME)
+          .map((key) => caches.delete(key))
       );
     }).then(() => self.clients.claim())
   );
@@ -71,6 +79,29 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => caches.match('/') || caches.match(request))
+    );
+    return;
+  }
+
+  // Strategy for AI Models (TensorFlow.js / MoveNet weights & shards): Cache-first
+  if (
+    url.hostname.includes('tfhub.dev') ||
+    url.hostname.includes('storage.googleapis.com') ||
+    url.pathname.endsWith('.bin') ||
+    url.pathname.endsWith('model.json')
+  ) {
+    event.respondWith(
+      caches.open(MODEL_CACHE_NAME).then((modelCache) => {
+        return modelCache.match(request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          return fetch(request).then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              modelCache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+          });
+        });
+      })
     );
     return;
   }

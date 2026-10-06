@@ -155,3 +155,64 @@ export function getPushupAngles(keypoints: Point2D[]) {
     preferredSide,
   };
 }
+
+export function getDeadliftAngles(keypoints: Point2D[]) {
+  const leftHip = keypoints[KEYPOINT_INDEX.LEFT_HIP];
+  const leftKnee = keypoints[KEYPOINT_INDEX.LEFT_KNEE];
+  const leftAnkle = keypoints[KEYPOINT_INDEX.LEFT_ANKLE];
+  const leftShoulder = keypoints[KEYPOINT_INDEX.LEFT_SHOULDER];
+
+  const rightHip = keypoints[KEYPOINT_INDEX.RIGHT_HIP];
+  const rightKnee = keypoints[KEYPOINT_INDEX.RIGHT_KNEE];
+  const rightAnkle = keypoints[KEYPOINT_INDEX.RIGHT_ANKLE];
+  const rightShoulder = keypoints[KEYPOINT_INDEX.RIGHT_SHOULDER];
+
+  const hipAngleL = calculateAngle(leftShoulder, leftHip, leftKnee);
+  const hipAngleR = calculateAngle(rightShoulder, rightHip, rightKnee);
+  const kneeAngleL = calculateAngle(leftHip, leftKnee, leftAnkle);
+  const kneeAngleR = calculateAngle(rightHip, rightKnee, rightAnkle);
+
+  const leftScore = ((leftHip.score || 0) + (leftKnee.score || 0) + (leftShoulder.score || 0)) / 3;
+  const rightScore = ((rightHip.score || 0) + (rightKnee.score || 0) + (rightShoulder.score || 0)) / 3;
+  const preferredSide = rightScore > leftScore ? 'right' : 'left';
+
+  return {
+    primaryHipAngle: preferredSide === 'right' ? hipAngleR : hipAngleL,
+    primaryKneeAngle: preferredSide === 'right' ? kneeAngleR : kneeAngleL,
+    hipAngleL,
+    hipAngleR,
+    kneeAngleL,
+    kneeAngleR,
+    preferredSide,
+  };
+}
+
+export function getLungeAngles(keypoints: Point2D[]) {
+  const leftHip = keypoints[KEYPOINT_INDEX.LEFT_HIP];
+  const leftKnee = keypoints[KEYPOINT_INDEX.LEFT_KNEE];
+  const leftAnkle = keypoints[KEYPOINT_INDEX.LEFT_ANKLE];
+  const leftShoulder = keypoints[KEYPOINT_INDEX.LEFT_SHOULDER];
+
+  const rightHip = keypoints[KEYPOINT_INDEX.RIGHT_HIP];
+  const rightKnee = keypoints[KEYPOINT_INDEX.RIGHT_KNEE];
+  const rightAnkle = keypoints[KEYPOINT_INDEX.RIGHT_ANKLE];
+  const rightShoulder = keypoints[KEYPOINT_INDEX.RIGHT_SHOULDER];
+
+  const kneeAngleL = calculateAngle(leftHip, leftKnee, leftAnkle);
+  const kneeAngleR = calculateAngle(rightHip, rightKnee, rightAnkle);
+  const torsoAngleL = calculateAngle(leftShoulder, leftHip, leftKnee);
+  const torsoAngleR = calculateAngle(rightShoulder, rightHip, rightKnee);
+
+  // In a lunge, one knee is bent more forward (front knee has smaller angle during descent)
+  const isLeftFront = kneeAngleL < kneeAngleR;
+  const frontKneeAngle = isLeftFront ? kneeAngleL : kneeAngleR;
+  const backKneeAngle = isLeftFront ? kneeAngleR : kneeAngleL;
+
+  return {
+    primaryKneeAngle: frontKneeAngle,
+    frontKneeAngle,
+    backKneeAngle,
+    torsoAngle: isLeftFront ? torsoAngleL : torsoAngleR,
+    isLeftFront,
+  };
+}

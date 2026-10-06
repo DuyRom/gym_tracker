@@ -162,3 +162,80 @@ export function analyzePushupForm(data: {
     tips: tips.slice(0, 2),
   };
 }
+
+export function analyzeDeadliftForm(data: {
+  hipAngle: number;
+  kneeAngle: number;
+}): FormFeedback {
+  let score = 100;
+  const tips: string[] = [];
+
+  // Hip hinge depth
+  if (data.hipAngle > 125) {
+    score -= 20;
+    tips.push('Chưa gập hông đủ sâu (đẩy mông ra sau nhiều hơn)');
+  }
+
+  // Squatting instead of hinging (knee bent too much)
+  if (data.kneeAngle < 100) {
+    score -= 25;
+    tips.push('Đầu gối gập quá nhiều giống Squat — giữ cẳng chân gần thẳng đứng');
+  }
+
+  // Back rounding risk
+  if (data.hipAngle < 65) {
+    score -= 25;
+    tips.push('Thân người gập quá thấp, mở ngực và giữ thẳng cột sống');
+  }
+
+  const isGoodRep = score >= 75;
+  let statusText = 'Kéo tạ rất chuẩn! 🏋️‍♂️';
+  if (score < 60) {
+    statusText = 'Chú ý tư thế hông & lưng ⚠️';
+  } else if (score < 75) {
+    statusText = 'Khá tốt, hãy đẩy hông rõ hơn 👍';
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    isGoodRep,
+    statusText,
+    tips: tips.slice(0, 2),
+  };
+}
+
+export function analyzeLungeForm(data: {
+  frontKneeAngle: number;
+  backKneeAngle: number;
+  torsoAngle: number;
+}): FormFeedback {
+  let score = 100;
+  const tips: string[] = [];
+
+  // Front knee depth (~90-100 deg)
+  if (data.frontKneeAngle > 120) {
+    score -= 25;
+    tips.push('Chưa đủ độ sâu — hạ gối trước vuông góc ~90°');
+  }
+
+  // Torso upright check
+  if (data.torsoAngle < 65) {
+    score -= 20;
+    tips.push('Thân người nghiêng quá nhiều — siết bụng và giữ ngực thẳng');
+  }
+
+  const isGoodRep = score >= 75;
+  let statusText = 'Bước chùng chân chuẩn! 🦵';
+  if (score < 60) {
+    statusText = 'Cần hạ sâu và giữ thăng bằng ⚠️';
+  } else if (score < 75) {
+    statusText = 'Tốt, chú ý độ vuông góc gối 👍';
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    isGoodRep,
+    statusText,
+    tips: tips.slice(0, 2),
+  };
+}

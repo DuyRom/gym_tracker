@@ -142,4 +142,16 @@ export const EXERCISE_CONFIGS: Record<string, RepCounterConfig> = {
     hysteresis: 8,
     minRepDurationMs: 1000,
   },
+  deadlift: {
+    upThreshold: 165,
+    downThreshold: 100,
+    hysteresis: 8,
+    minRepDurationMs: 1200,
+  },
+  lunge: {
+    upThreshold: 160,
+    downThreshold: 105,
+    hysteresis: 8,
+    minRepDurationMs: 1100,
+  },
 };
