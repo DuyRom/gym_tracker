@@ -249,7 +249,10 @@ export default function DashboardPage() {
                 stats.recentSessions.slice(0, 5).map((session: any) => {
                   const completedEx = session.exercises?.filter((e: any) => e.completed).length || 0;
                   const totalEx = session.exercises?.length || 0;
-                  const isDone = session.status === 'COMPLETED';
+                  const status = session.status;
+                  const isCompleted = status === 'COMPLETED';
+                  const isInProgress = status === 'IN_PROGRESS';
+                  const isMissed = status === 'MISSED';
 
                   return (
                     <tr key={session.id}>
@@ -261,15 +264,25 @@ export default function DashboardPage() {
                         <span className="exercise-en">{session.workoutDay?.focus}</span>
                       </td>
                       <td>
-                        {isDone ? (
+                        {isCompleted ? (
                           <span className="badge badge-emerald" style={{ gap: 4 }}>
                             <CheckCircle size={12} />
                             Đã tập
                           </span>
-                        ) : (
+                        ) : isInProgress ? (
+                          <span className="badge badge-amber" style={{ gap: 4, background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                            <Clock size={12} />
+                            Đang tập
+                          </span>
+                        ) : isMissed ? (
                           <span className="badge badge-rose" style={{ gap: 4 }}>
                             <AlertCircle size={12} />
                             Bỏ lỡ
+                          </span>
+                        ) : (
+                          <span className="badge badge-cyan" style={{ gap: 4 }}>
+                            <Calendar size={12} />
+                            Kế hoạch
                           </span>
                         )}
                       </td>

@@ -5,30 +5,55 @@ export class SessionService {
    * Get active session currently in progress for user
    */
   static async getActiveSession(userId: string) {
-    return prisma.workoutSession.findFirst({
-      where: {
-        userId,
-        status: 'IN_PROGRESS',
-      },
-      include: {
-        workoutDay: {
-          include: {
-            exercises: {
-              where: { isArchived: false },
-              orderBy: { orderIndex: 'asc' },
+    try {
+      return await prisma.workoutSession.findFirst({
+        where: {
+          userId,
+          status: 'IN_PROGRESS',
+        },
+        include: {
+          workoutDay: {
+            include: {
+              exercises: {
+                where: { isArchived: false },
+                orderBy: { orderIndex: 'asc' },
+              },
+            },
+          },
+          exercises: {
+            include: {
+              exercise: true,
+              aiCoachSessions: {
+                orderBy: { createdAt: 'desc' },
+              },
             },
           },
         },
-        exercises: {
-          include: {
-            exercise: true,
-            aiCoachSessions: {
-              orderBy: { createdAt: 'desc' },
+      });
+    } catch (err) {
+      console.warn('getActiveSession with aiCoachSessions failed, falling back to basic query:', err);
+      return prisma.workoutSession.findFirst({
+        where: {
+          userId,
+          status: 'IN_PROGRESS',
+        },
+        include: {
+          workoutDay: {
+            include: {
+              exercises: {
+                where: { isArchived: false },
+                orderBy: { orderIndex: 'asc' },
+              },
+            },
+          },
+          exercises: {
+            include: {
+              exercise: true,
             },
           },
         },
-      },
-    });
+      });
+    }
   }
 
   /**

@@ -57,8 +57,8 @@ export async function initStatusBar() {
   if (!isNativePlatform()) return;
   try {
     await StatusBar.setStyle({ style: Style.Dark });
-    await StatusBar.setBackgroundColor({ color: '#0a0a0f' });
-    await StatusBar.setOverlaysWebView({ overlay: false });
+    await StatusBar.setBackgroundColor({ color: '#090D16' });
+    await StatusBar.setOverlaysWebView({ overlay: true });
   } catch (e) {
     console.debug('StatusBar configuration error:', e);
   }

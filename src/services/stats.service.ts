@@ -15,8 +15,17 @@ export class StatsService {
       },
     });
 
+    const nowMs = Date.now();
     const completedSessions = sessions.filter((s) => s.status === 'COMPLETED');
-    const missedSessions = sessions.filter((s) => s.status === 'MISSED');
+    const missedSessions = sessions.filter((s) => {
+      if (s.status === 'MISSED') return true;
+      // If a session was started > 24 hours ago and never finished, consider it uncompleted
+      if (s.status === 'IN_PROGRESS') {
+        const sessionTime = new Date(s.date).getTime();
+        return (nowMs - sessionTime) > 24 * 60 * 60 * 1000;
+      }
+      return false;
+    });
 
     const totalSessions = completedSessions.length;
     const totalDurationMin = completedSessions.reduce((acc, s) => acc + (s.durationMin || 0), 0);

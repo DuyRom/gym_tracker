@@ -1423,6 +1423,14 @@ tr:hover td {
   color: #FFFFFF;
 }
 
+@media (max-width: 899px) {
+  .timer-capsule-trigger,
+  .timer-widget {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    right: 14px;
+  }
+}
+
 /* Modals */
 .modal-overlay {
   position: fixed;

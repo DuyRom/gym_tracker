@@ -312,12 +312,13 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <main className="container">
+    <main className="container" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
       {/* Top Main Mode Switcher */}
       <div
         style={{
           display: 'flex',
-          gap: 10,
+          flexWrap: 'wrap',
+          gap: 8,
           marginBottom: 16,
           background: 'rgba(15, 23, 42, 0.6)',
           padding: 6,
@@ -328,21 +329,23 @@ export default function AnalyticsPage() {
         <button
           onClick={() => setActiveMainTab('progressive_overload')}
           className={`tab-btn ${activeMainTab === 'progressive_overload' ? 'active' : ''}`}
-          style={{ flex: 1, justifyContent: 'center', padding: '10px 16px', fontSize: 14 }}
+          style={{ flex: '1 1 180px', minWidth: 0, justifyContent: 'center', padding: '10px 12px', fontSize: 13 }}
           type="button"
         >
           <TrendingUp size={16} />
-          <span>🏋️ Khối Lượng Tạ (Progressive Overload)</span>
+          <span className="tab-label-desktop">🏋️ Khối Lượng Tạ (Progressive Overload)</span>
+          <span className="tab-label-mobile">🏋️ Khối Lượng Tạ</span>
         </button>
 
         <button
           onClick={() => setActiveMainTab('ai_coach')}
           className={`tab-btn ${activeMainTab === 'ai_coach' ? 'active' : ''}`}
-          style={{ flex: 1, justifyContent: 'center', padding: '10px 16px', fontSize: 14 }}
+          style={{ flex: '1 1 180px', minWidth: 0, justifyContent: 'center', padding: '10px 12px', fontSize: 13 }}
           type="button"
         >
           <Sparkles size={16} color="#38BDF8" />
-          <span>🤖 AI Vision Coach (Form & Reps)</span>
+          <span className="tab-label-desktop">🤖 AI Vision Coach (Form & Reps)</span>
+          <span className="tab-label-mobile">🤖 AI Coach Form</span>
         </button>
       </div>
 
@@ -569,7 +572,7 @@ export default function AnalyticsPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 16,
               marginBottom: 16,
             }}

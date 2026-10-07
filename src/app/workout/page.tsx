@@ -8,7 +8,7 @@ import TechniqueDetailModal from '@/components/workout/TechniqueDetailModal';
 import AiCoachInlineModal from '@/components/workout/AiCoachInlineModal';
 import { WorkoutDayItem, WorkoutSessionItem } from '@/types/workout';
 import { formatDuration } from '@/lib/utils';
-import { hapticSuccess, hapticImpact, hapticSelection } from '@/lib/native-bridge';
+import { hapticSuccess, hapticImpact, hapticSelection, hapticWarning } from '@/lib/native-bridge';
 
 export default function WorkoutPage() {
   const [allDays, setAllDays] = useState<WorkoutDayItem[]>([]);
@@ -152,15 +152,20 @@ export default function WorkoutPage() {
         body: JSON.stringify({ workoutDayId: selectedDayId }),
       });
       const data = await res.json();
-      if (data.session) {
+      if (res.ok && data.session) {
         hapticImpact();
         setActiveSession(data.session);
         const startMs = new Date(data.session.startedAt || Date.now()).getTime();
         setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
         setShowStartConfirm(false);
+      } else {
+        hapticWarning();
+        alert(data.error || 'Không thể khởi tạo buổi tập. Vui lòng thử lại!');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to start session:', err);
+      hapticWarning();
+      alert('Lỗi kết nối máy chủ khi bắt đầu buổi tập: ' + (err?.message || err));
     } finally {
       setStarting(false);
     }
