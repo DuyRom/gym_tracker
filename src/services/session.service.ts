@@ -57,12 +57,22 @@ export class SessionService {
   }
 
   /**
-   * Start a new workout session
+   * Start a new workout session (supports customDate for log bù / backfilling past workouts)
    */
-  static async startSession(userId: string, workoutDayId: string) {
+  static async startSession(userId: string, workoutDayId: string, customDate?: string | Date) {
     // 1. If user already has an active session, return it
     const active = await this.getActiveSession(userId);
     if (active) {
+      if (customDate) {
+        const parsed = new Date(customDate);
+        if (!isNaN(parsed.getTime())) {
+          await prisma.workoutSession.update({
+            where: { id: active.id },
+            data: { date: parsed, startedAt: parsed },
+          });
+          return this.getActiveSession(userId);
+        }
+      }
       return active;
     }
 
@@ -82,14 +92,21 @@ export class SessionService {
     }
 
     const now = new Date();
+    let sessionDate = now;
+    if (customDate) {
+      const parsed = new Date(customDate);
+      if (!isNaN(parsed.getTime())) {
+        sessionDate = parsed;
+      }
+    }
 
     // 3. Create session
     const session = await prisma.workoutSession.create({
       data: {
         userId,
         workoutDayId,
-        date: now,
-        startedAt: now,
+        date: sessionDate,
+        startedAt: sessionDate,
         status: 'IN_PROGRESS',
       },
       include: {
@@ -121,9 +138,14 @@ export class SessionService {
   }
 
   /**
-   * Complete a session and calculate duration
+   * Complete a session and calculate duration (supports customDurationMin and customDate)
    */
-  static async finishSession(sessionId: string, notes?: string) {
+  static async finishSession(
+    sessionId: string,
+    notes?: string,
+    customDurationMin?: number,
+    customDate?: string | Date
+  ) {
     const session = await prisma.workoutSession.findUnique({
       where: { id: sessionId },
     });
@@ -133,18 +155,39 @@ export class SessionService {
     }
 
     const endedAt = new Date();
-    const startedAt = session.startedAt || session.date || endedAt;
-    const diffMs = endedAt.getTime() - new Date(startedAt).getTime();
-    const durationMin = Math.max(1, Math.round(diffMs / (1000 * 60)));
+    let durationMin =
+      customDurationMin !== undefined && customDurationMin !== null
+        ? Number(customDurationMin)
+        : undefined;
+
+    if (!durationMin || durationMin <= 0) {
+      const startedAt = session.startedAt || session.date || endedAt;
+      const diffMs = Math.abs(endedAt.getTime() - new Date(startedAt).getTime());
+      // If difference is greater than 8 hours (e.g. backfill or leftover session), default to 45 min
+      if (diffMs > 8 * 60 * 60 * 1000) {
+        durationMin = 45;
+      } else {
+        durationMin = Math.max(1, Math.round(diffMs / (1000 * 60)));
+      }
+    }
+
+    const updateData: any = {
+      endedAt,
+      durationMin,
+      status: 'COMPLETED',
+      notes: notes ?? session.notes,
+    };
+
+    if (customDate) {
+      const parsed = new Date(customDate);
+      if (!isNaN(parsed.getTime())) {
+        updateData.date = parsed;
+      }
+    }
 
     return prisma.workoutSession.update({
       where: { id: sessionId },
-      data: {
-        endedAt,
-        durationMin,
-        status: 'COMPLETED',
-        notes: notes ?? session.notes,
-      },
+      data: updateData,
       include: {
         workoutDay: true,
         exercises: {

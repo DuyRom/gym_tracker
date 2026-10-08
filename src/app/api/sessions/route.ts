@@ -23,12 +23,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Chưa đăng nhập' }, { status: 401 });
     }
 
-    const { workoutDayId } = await req.json();
+    const { workoutDayId, date } = await req.json();
     if (!workoutDayId) {
       return NextResponse.json({ error: 'workoutDayId là bắt buộc' }, { status: 400 });
     }
 
-    const session = await SessionService.startSession(user.id, workoutDayId);
+    const session = await SessionService.startSession(user.id, workoutDayId, date);
     return NextResponse.json({ success: true, session });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500 });

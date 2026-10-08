@@ -15,8 +15,10 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const notes = body.notes;
+    const durationMin = body.durationMin;
+    const date = body.date;
 
-    const finishedSession = await SessionService.finishSession(id, notes);
+    const finishedSession = await SessionService.finishSession(id, notes, durationMin, date);
     return NextResponse.json({ success: true, session: finishedSession });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500 });

@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Dumbbell, Clock, Flame, Award, ArrowRight, Play, Calendar, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
+import { Dumbbell, Clock, Flame, Award, ArrowRight, Play, Calendar, CheckCircle, AlertCircle, RotateCcw, Edit3 } from 'lucide-react';
 import WeeklyBarChart from '@/components/charts/WeeklyBarChart';
 import DurationLineChart from '@/components/charts/DurationLineChart';
 import CompletionDonutChart from '@/components/charts/CompletionDonutChart';
 import CalendarHeatmap from '@/components/charts/CalendarHeatmap';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import EditSessionModal from '@/components/workout/EditSessionModal';
 import { DashboardStatsResponse } from '@/types/stats';
 import { formatDateVi } from '@/lib/utils';
 
@@ -16,6 +17,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [showResetConfirm, setShowResetConfirm] = useState<boolean>(false);
   const [resetting, setResetting] = useState<boolean>(false);
+  const [sessionToEdit, setSessionToEdit] = useState<any | null>(null);
 
   const loadStats = () => {
     fetch('/api/stats')
@@ -242,6 +244,7 @@ export default function DashboardPage() {
                 <th>Thời Gian</th>
                 <th>Bài Đã Tập</th>
                 <th>Ghi Chú</th>
+                <th style={{ textAlign: 'center', width: 90 }}>Thao Tác</th>
               </tr>
             </thead>
             <tbody>
@@ -299,12 +302,24 @@ export default function DashboardPage() {
                       <td style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 260 }}>
                         {session.notes || 'Không có ghi chú'}
                       </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSessionToEdit(session)}
+                          className="btn btn-secondary"
+                          style={{ padding: '4px 8px', fontSize: 11, height: 28, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          title="Sửa buổi tập / đổi ngày"
+                        >
+                          <Edit3 size={12} color="#38BDF8" />
+                          <span>Sửa</span>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
                     Chưa có buổi tập nào. Hãy bấm Bắt Đầu Tập để ghi nhận buổi đầu tiên!
                   </td>
                 </tr>
@@ -333,6 +348,17 @@ export default function DashboardPage() {
         cancelText="Hủy bỏ"
         variant="danger"
         icon={<RotateCcw size={22} />}
+      />
+
+      {/* Edit Session Modal directly on Dashboard */}
+      <EditSessionModal
+        isOpen={Boolean(sessionToEdit)}
+        session={sessionToEdit}
+        onClose={() => setSessionToEdit(null)}
+        onSaved={() => {
+          setSessionToEdit(null);
+          loadStats();
+        }}
       />
     </main>
   );

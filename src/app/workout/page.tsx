@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Play, Square, CheckSquare, Square as UncheckedSquare, Dumbbell, Clock, Video, Info, Award, Calendar, Sparkles, Bot, CheckCircle2 } from 'lucide-react';
+import { Play, Square, CheckSquare, Square as UncheckedSquare, Dumbbell, Clock, Video, Info, Award, Calendar, Sparkles, Bot, CheckCircle2, HelpCircle } from 'lucide-react';
 import CompletionModal from '@/components/workout/CompletionModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import TechniqueDetailModal from '@/components/workout/TechniqueDetailModal';
 import AiCoachInlineModal from '@/components/workout/AiCoachInlineModal';
+import WeightGuideModal from '@/components/workout/WeightGuideModal';
 import { WorkoutDayItem, WorkoutSessionItem } from '@/types/workout';
-import { formatDuration } from '@/lib/utils';
+import { formatDuration, formatDateVi } from '@/lib/utils';
 import { hapticSuccess, hapticImpact, hapticSelection, hapticWarning } from '@/lib/native-bridge';
 
 export default function WorkoutPage() {
@@ -22,6 +23,12 @@ export default function WorkoutPage() {
   const [showFinishConfirm, setShowFinishConfirm] = useState<boolean>(false);
   const [starting, setStarting] = useState<boolean>(false);
   const [finishing, setFinishing] = useState<boolean>(false);
+
+  // Log bù (Backfill date selection) states
+  const [targetDateOption, setTargetDateOption] = useState<'TODAY' | 'YESTERDAY' | 'CUSTOM'>('TODAY');
+  const [customDateValue, setCustomDateValue] = useState<string>('');
+  const [finishDurationMin, setFinishDurationMin] = useState<number>(45);
+  const [showWeightGuideModal, setShowWeightGuideModal] = useState<boolean>(false);
 
   // Technique Modal & AI Coach Inline Modal States
   const [selectedTechniqueExercise, setSelectedTechniqueExercise] = useState<any | null>(null);
@@ -141,22 +148,53 @@ export default function WorkoutPage() {
     };
   }, [sessionStartedAt]);
 
-  // 3. Start Session execution
+  // Open Start Dialog with smart date defaults
+  const handleOpenStartDialog = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDow = yesterday.getDay();
+    if (currentSelectedDay?.dayOfWeek === yesterdayDow) {
+      setTargetDateOption('YESTERDAY');
+    } else {
+      setTargetDateOption('TODAY');
+    }
+    setCustomDateValue(yesterday.toISOString().slice(0, 10));
+    setShowStartConfirm(true);
+  };
+
+  // 3. Start Session execution (supports date parameter for log bù)
   const executeStartSession = async () => {
     if (!selectedDayId) return;
     setStarting(true);
     try {
+      let chosenDateStr = new Date().toISOString();
+      if (targetDateOption === 'YESTERDAY') {
+        const y = new Date();
+        y.setDate(y.getDate() - 1);
+        chosenDateStr = y.toISOString();
+      } else if (targetDateOption === 'CUSTOM' && customDateValue) {
+        chosenDateStr = new Date(customDateValue + 'T12:00:00.000Z').toISOString();
+      }
+
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workoutDayId: selectedDayId }),
+        body: JSON.stringify({
+          workoutDayId: selectedDayId,
+          date: chosenDateStr,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.session) {
         hapticImpact();
         setActiveSession(data.session);
-        const startMs = new Date(data.session.startedAt || Date.now()).getTime();
-        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
+        const isPastDate = new Date(data.session.date).toDateString() !== new Date().toDateString();
+        if (isPastDate) {
+          setElapsedSeconds(0);
+        } else {
+          const startMs = new Date(data.session.startedAt || Date.now()).getTime();
+          setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
+        }
         setShowStartConfirm(false);
       } else {
         hapticWarning();
@@ -237,6 +275,14 @@ export default function WorkoutPage() {
   // 5. Finish Session trigger
   const handleFinishSession = () => {
     if (!activeSession) return;
+    const isPastDate = new Date(activeSession.date).toDateString() !== new Date().toDateString();
+    const minutesFromTimer = Math.round(elapsedSeconds / 60);
+    const plannedMin = currentSelectedDay?.durationMin || 40;
+    if (isPastDate || minutesFromTimer < 3) {
+      setFinishDurationMin(plannedMin);
+    } else {
+      setFinishDurationMin(minutesFromTimer);
+    }
     setShowFinishConfirm(true);
   };
 
@@ -248,7 +294,10 @@ export default function WorkoutPage() {
       const res = await fetch(`/api/sessions/${activeSession.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: sessionNotes }),
+        body: JSON.stringify({
+          notes: sessionNotes,
+          durationMin: finishDurationMin,
+        }),
       });
       const data = await res.json();
       if (data.session) {
@@ -256,7 +305,7 @@ export default function WorkoutPage() {
         const completedCount = activeSession.exercises.filter((e) => e.completed).length;
         const totalCount = activeSession.exercises.length;
         setCompletedSummary({
-          durationMin: data.session.durationMin || Math.max(1, Math.round(elapsedSeconds / 60)),
+          durationMin: data.session.durationMin || finishDurationMin,
           completedCount,
           totalCount,
           dayName: activeSession.workoutDay.name,
@@ -369,12 +418,28 @@ export default function WorkoutPage() {
       <section className="hero-card" style={{ borderLeft: activeSession ? '3px solid #10B981' : undefined }}>
         <div className="hero-top">
           <div className="title-area">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
               {activeSession ? (
-                <span className="badge badge-emerald">
-                  <span className="pulse-dot" />
-                  ĐANG TRONG BUỔI TẬP
-                </span>
+                <>
+                  <span className="badge badge-emerald">
+                    <span className="pulse-dot" />
+                    ĐANG TRONG BUỔI TẬP
+                  </span>
+                  {new Date(activeSession.date).toDateString() !== new Date().toDateString() && (
+                    <span
+                      className="badge badge-amber"
+                      style={{
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        color: '#FBBF24',
+                        borderColor: 'rgba(245, 158, 11, 0.35)',
+                        gap: 4,
+                      }}
+                    >
+                      <Calendar size={12} />
+                      <span>Log Bù ({formatDateVi(activeSession.date)})</span>
+                    </span>
+                  )}
+                </>
               ) : (
                 <span className="badge badge-cyan">SẴN SÀNG TẬP LUYỆN</span>
               )}
@@ -412,7 +477,7 @@ export default function WorkoutPage() {
               </div>
             ) : (
               <button
-                onClick={() => setShowStartConfirm(true)}
+                onClick={handleOpenStartDialog}
                 disabled={!selectedDayId || loading}
                 className="btn btn-primary"
                 style={{ padding: '12px 26px', fontSize: 15 }}
@@ -472,10 +537,31 @@ export default function WorkoutPage() {
             <span className="day-tag">DANH SÁCH BÀI TẬP</span>
             <div className="day-name">Chi Tiết Từng Bài & Ghi Nhận Mức Tạ</div>
           </div>
-          <span className="badge badge-cyan">
-            <Clock size={12} />
-            Mục tiêu: {currentSelectedDay?.durationMin || 45} phút
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShowWeightGuideModal(true)}
+              className="btn btn-secondary"
+              style={{
+                fontSize: 12,
+                padding: '6px 12px',
+                color: '#38BDF8',
+                borderColor: 'rgba(56, 189, 248, 0.35)',
+                background: 'rgba(56, 189, 248, 0.08)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+              title="Xem quy ước ghi số kg cho tạ đơn và thanh tạ đòn"
+            >
+              <HelpCircle size={14} />
+              <span>Quy ước ghi mức tạ</span>
+            </button>
+            <span className="badge badge-cyan">
+              <Clock size={12} />
+              Mục tiêu: {currentSelectedDay?.durationMin || 45} phút
+            </span>
+          </div>
         </div>
 
         <div className="table-responsive">
@@ -485,7 +571,22 @@ export default function WorkoutPage() {
                 <th style={{ width: 55, textAlign: 'center' }}>Check</th>
                 <th style={{ width: 45 }}>STT</th>
                 <th>Tên Bài Tập</th>
-                <th style={{ width: 120, textAlign: 'center' }}>Mức Tạ (kg)</th>
+                <th style={{ width: 135, textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <span>Mức Tạ (kg)</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowWeightGuideModal(true)}
+                      style={{ background: 'none', border: 'none', color: '#38BDF8', cursor: 'pointer', padding: 0, display: 'inline-flex' }}
+                      title="Bấm xem quy ước: Tạ đơn ghi 1 quả (Top set). Tạ đòn ghi đòn + bánh 2 bên."
+                    >
+                      <HelpCircle size={13} />
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 400, marginTop: 1 }}>
+                    1 bên / Đòn + 2 bên
+                  </div>
+                </th>
                 <th>Hiệp x Reps</th>
                 <th>Ngưỡng RIR</th>
                 <th>Lưu Ý Kỹ Thuật Sinh Học</th>
@@ -705,7 +806,7 @@ export default function WorkoutPage() {
         sessionData={completedSummary}
       />
 
-      {/* Modern Confirm Dialog for Starting Session */}
+      {/* Modern Confirm Dialog for Starting Session (With Log Bù Date Picker) */}
       <ConfirmDialog
         isOpen={showStartConfirm}
         onClose={() => setShowStartConfirm(false)}
@@ -714,8 +815,11 @@ export default function WorkoutPage() {
         title="Bắt Đầu Buổi Tập Mới"
         message={
           <div>
-            Bạn chuẩn bị bắt đầu tập giáo án:{' '}
-            <strong style={{ color: '#F8FAFC' }}>{currentSelectedDay?.name}</strong>
+            <div>
+              Bạn chuẩn bị bắt đầu tập giáo án:{' '}
+              <strong style={{ color: '#F8FAFC' }}>{currentSelectedDay?.name}</strong>
+            </div>
+
             <div
               style={{
                 marginTop: 10,
@@ -731,14 +835,103 @@ export default function WorkoutPage() {
               <div>🎯 <strong>Nhóm cơ:</strong> {currentSelectedDay?.focus}</div>
               <div style={{ marginTop: 4 }}>📋 <strong>Số lượng:</strong> {exercisesToDisplay.length} bài tập</div>
             </div>
-            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
-              ⏱️ Hệ thống sẽ bắt đầu bấm giờ và mở danh sách bài tập để bạn ghi nhận số hiệp & mức tạ.
+
+            {/* Choose Date to Log / Log Bù */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, fontSize: 13, fontWeight: 700, color: '#38BDF8' }}>
+                <Calendar size={14} />
+                <span>Ngày ghi nhận buổi tập:</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setTargetDateOption('TODAY')}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: targetDateOption === 'TODAY' ? '1.5px solid #10B981' : '1px solid rgba(255, 255, 255, 0.1)',
+                    background: targetDateOption === 'TODAY' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                    color: targetDateOption === 'TODAY' ? '#34D399' : 'var(--text-muted)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>🟢 Hôm nay</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>{formatDateVi(new Date())}</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTargetDateOption('YESTERDAY')}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: targetDateOption === 'YESTERDAY' ? '1.5px solid #F59E0B' : '1px solid rgba(255, 255, 255, 0.1)',
+                    background: targetDateOption === 'YESTERDAY' ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255, 255, 255, 0.03)',
+                    color: targetDateOption === 'YESTERDAY' ? '#FBBF24' : 'var(--text-muted)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>🟡 Hôm qua (Log bù)</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>
+                    {(() => {
+                      const y = new Date();
+                      y.setDate(y.getDate() - 1);
+                      return formatDateVi(y);
+                    })()}
+                  </div>
+                </button>
+              </div>
+
+              <div style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setTargetDateOption('CUSTOM')}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    borderRadius: 8,
+                    border: targetDateOption === 'CUSTOM' ? '1.5px solid #38BDF8' : '1px solid rgba(255, 255, 255, 0.1)',
+                    background: targetDateOption === 'CUSTOM' ? 'rgba(56, 189, 248, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    color: targetDateOption === 'CUSTOM' ? '#38BDF8' : 'var(--text-dim)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span>📅 Chọn ngày khác...</span>
+                  {targetDateOption === 'CUSTOM' && customDateValue && <span>{customDateValue}</span>}
+                </button>
+
+                {targetDateOption === 'CUSTOM' && (
+                  <input
+                    type="date"
+                    value={customDateValue}
+                    onChange={(e) => setCustomDateValue(e.target.value)}
+                    className="input-field"
+                    style={{ width: '100%', marginTop: 6, fontSize: 13, padding: '6px 10px' }}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.5 }}>
+              ⏱️ Sau khi bấm bắt đầu, bạn hãy tích hoàn thành các bài và ghi số kg tạ đạt được.
             </div>
           </div>
         }
-        confirmText="Sẵn Sàng, Bắt Đầu!"
+        confirmText={targetDateOption === 'TODAY' ? 'Sẵn Sàng, Bắt Đầu!' : 'Bắt Đầu (Log Bù)'}
         cancelText="Để sau / Đổi ngày"
-        variant="success"
+        variant={targetDateOption === 'TODAY' ? 'success' : 'warning'}
         icon={<Dumbbell size={22} />}
       />
 
@@ -749,11 +942,40 @@ export default function WorkoutPage() {
         onConfirm={executeFinishSession}
         loading={finishing}
         title="Kết Thúc Buổi Tập"
-        message="Bạn có chắc chắn muốn kết thúc buổi tập này không? Tiến độ các bài tập và mức tạ đã ghi nhận sẽ được lưu vào lịch sử."
+        message={
+          <div>
+            <div>
+              Bạn có chắc chắn muốn kết thúc buổi tập này không? Tiến độ các bài tập và mức tạ đã ghi nhận sẽ được lưu vào lịch sử.
+            </div>
+            <div style={{ marginTop: 14, padding: '12px 14px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#38BDF8', marginBottom: 6 }}>
+                ⏱️ Thời lượng buổi tập (phút):
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="number"
+                  min="1"
+                  max="300"
+                  value={finishDurationMin}
+                  onChange={(e) => setFinishDurationMin(Number(e.target.value))}
+                  className="input-field"
+                  style={{ width: 100, fontSize: 16, fontWeight: 700, fontFamily: 'JetBrains Mono', textAlign: 'center' }}
+                />
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>phút (tùy chỉnh nếu log bù)</span>
+              </div>
+            </div>
+          </div>
+        }
         confirmText="Hoàn thành buổi tập"
         cancelText="Tiếp tục tập"
         variant="primary"
         icon={<Clock size={24} />}
+      />
+
+      {/* Weight Guide Modal */}
+      <WeightGuideModal
+        isOpen={showWeightGuideModal}
+        onClose={() => setShowWeightGuideModal(false)}
       />
 
       {/* Biomechanical Technique Detail Modal */}

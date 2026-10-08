@@ -231,9 +231,24 @@ export default function EditSessionModal({
           {/* Exercise items list */}
           {exercises.length > 0 && (
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#E2E8F0', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#E2E8F0', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Dumbbell size={15} color="#38BDF8" />
                 <span>Chi tiết bài tập ({exercises.length} bài)</span>
+              </div>
+
+              <div
+                style={{
+                  fontSize: 12,
+                  color: '#38BDF8',
+                  background: 'rgba(56, 189, 248, 0.08)',
+                  border: '1px solid rgba(56, 189, 248, 0.2)',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  marginBottom: 12,
+                  lineHeight: 1.4,
+                }}
+              >
+                💡 <strong>Quy ước ghi mức tạ:</strong> Tạ đơn ghi 1 quả (Top set) • Tạ đòn tính cả đòn + 2 bên bánh (VD: đòn 20kg + 2 bên 5kg = 30kg).
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
