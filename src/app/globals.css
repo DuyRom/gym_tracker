@@ -1289,6 +1289,51 @@ tr:hover td {
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+/* Global Active Workout Session Floating Widget */
+.active-workout-capsule {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(11, 17, 30, 0.94);
+  border: 1.5px solid rgba(16, 185, 129, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #F8FAFC;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.25);
+  z-index: 45;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.active-workout-capsule:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(16, 185, 129, 0.7);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.7), 0 0 26px rgba(16, 185, 129, 0.35);
+}
+
+.active-workout-card {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 320px;
+  max-width: calc(100vw - 28px);
+  background: #0B111E;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 16px 18px;
+  border-radius: 18px;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.8), 0 0 28px rgba(16, 185, 129, 0.18);
+  z-index: 45;
+  animation: widgetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Floating Rest Timer Widget: Capsule Trigger & Expanded Modal */
 .timer-capsule-trigger {
   position: fixed;
@@ -1425,7 +1470,9 @@ tr:hover td {
 
 @media (max-width: 899px) {
   .timer-capsule-trigger,
-  .timer-widget {
+  .timer-widget,
+  .active-workout-capsule,
+  .active-workout-card {
     bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     right: 14px;
   }

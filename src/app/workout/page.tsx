@@ -1,22 +1,33 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Play, Square, CheckSquare, Square as UncheckedSquare, Dumbbell, Clock, Video, Info, Award, Calendar, Sparkles, Bot, CheckCircle2, HelpCircle } from 'lucide-react';
 import CompletionModal from '@/components/workout/CompletionModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import TechniqueDetailModal from '@/components/workout/TechniqueDetailModal';
 import AiCoachInlineModal from '@/components/workout/AiCoachInlineModal';
 import WeightGuideModal from '@/components/workout/WeightGuideModal';
-import { WorkoutDayItem, WorkoutSessionItem } from '@/types/workout';
+import { WorkoutDayItem } from '@/types/workout';
 import { formatDuration, formatDateVi } from '@/lib/utils';
-import { hapticSuccess, hapticImpact, hapticSelection, hapticWarning } from '@/lib/native-bridge';
+import { hapticSuccess, hapticSelection } from '@/lib/native-bridge';
+import { useWorkoutSession } from '@/context/WorkoutSessionContext';
+import { useDataSync } from '@/lib/data-sync';
 
 export default function WorkoutPage() {
+  const {
+    activeSession,
+    elapsedSeconds,
+    loading: sessionLoading,
+    startSession,
+    finishSession,
+    toggleExerciseCompleted,
+    updateExerciseWeight,
+    saveAiCoachResult,
+  } = useWorkoutSession();
+
   const [allDays, setAllDays] = useState<WorkoutDayItem[]>([]);
   const [selectedDayId, setSelectedDayId] = useState<string>('');
-  const [activeSession, setActiveSession] = useState<WorkoutSessionItem | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [daysLoading, setDaysLoading] = useState<boolean>(true);
   const [sessionNotes, setSessionNotes] = useState<string>('');
   const [showCompletionModal, setShowCompletionModal] = useState<boolean>(false);
   const [showStartConfirm, setShowStartConfirm] = useState<boolean>(false);
@@ -42,111 +53,65 @@ export default function WorkoutPage() {
     dayName: '',
   });
 
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // 1. Fetch workout days and check active session
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        // Load days
-        const daysRes = await fetch('/api/exercises');
-        const daysData = await daysRes.json();
-        if (daysData.days) {
-          setAllDays(daysData.days);
-          // Auto select today's day of week
+  // 1. Fetch workout days with cache: no-store
+  const loadDays = useCallback(async () => {
+    try {
+      const daysRes = await fetch(`/api/exercises?_t=${Date.now()}`, { cache: 'no-store' });
+      const daysData = await daysRes.json();
+      if (daysData.days) {
+        setAllDays(daysData.days);
+        if (!selectedDayId) {
           const currentDayNum = new Date().getDay(); // 1 = Mon, 2 = Tue...
           const defaultDay = daysData.days.find((d: any) => d.dayOfWeek === currentDayNum) || daysData.days[0];
           if (defaultDay) setSelectedDayId(defaultDay.id);
         }
-
-        // Check active session
-        const activeRes = await fetch('/api/sessions/active');
-        const activeData = await activeRes.json();
-        if (activeData.session) {
-          setActiveSession(activeData.session);
-          setSelectedDayId(activeData.session.workoutDayId);
-
-          // Restore AI Coach results from database for all exercises in this session
-          if (Array.isArray(activeData.session.exercises)) {
-            const restoredAi: Record<string, { reps: number; score: number }> = {};
-            activeData.session.exercises.forEach((se: any) => {
-              if (se.aiCoachSessions && se.aiCoachSessions.length > 0) {
-                const latest = se.aiCoachSessions[0];
-                restoredAi[se.exerciseId] = {
-                  reps: latest.totalReps,
-                  score: Math.round(latest.avgFormScore),
-                };
-              } else if (se.actualReps && typeof se.actualReps === 'string' && se.actualReps.includes('AI')) {
-                const repsMatch = se.actualReps.match(/(\d+)\s*reps/i);
-                const scoreMatch = se.actualReps.match(/AI(?:\s*Score)?\s*(\d+)%/i);
-                if (repsMatch) {
-                  restoredAi[se.exerciseId] = {
-                    reps: parseInt(repsMatch[1], 10),
-                    score: scoreMatch ? parseInt(scoreMatch[1], 10) : 85,
-                  };
-                }
-              }
-            });
-            setAiCoachResults(restoredAi);
-          }
-
-          if (activeData.session.startedAt) {
-            const started = new Date(activeData.session.startedAt).getTime();
-            setElapsedSeconds(Math.max(0, Math.floor((Date.now() - started) / 1000)));
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load workout data:', err);
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      console.error('Failed to load workout days:', err);
+    } finally {
+      setDaysLoading(false);
     }
-
-    loadData();
-  }, []);
-
-  // 2. Active timer interval - calculates actual difference from startedAt every second
-  // and syncs on visibilitychange/focus to prevent drift & tab throttling lag
-  const sessionStartedAt = activeSession?.startedAt;
+  }, [selectedDayId]);
 
   useEffect(() => {
-    if (!sessionStartedAt) {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      setElapsedSeconds(0);
-      return;
+    loadDays();
+  }, [loadDays]);
+
+  // Reactive sync when schedule or exercises are changed
+  useDataSync(['SCHEDULE'], loadDays);
+
+  // 2. Synchronize selected day when active session is present
+  useEffect(() => {
+    if (activeSession?.workoutDayId) {
+      setSelectedDayId(activeSession.workoutDayId);
     }
+  }, [activeSession?.workoutDayId]);
 
-    const startTimestamp = new Date(sessionStartedAt).getTime();
-
-    const updateTimer = () => {
-      const current = Date.now();
-      const diffSec = Math.max(0, Math.floor((current - startTimestamp) / 1000));
-      setElapsedSeconds(diffSec);
-    };
-
-    // Immediate calculation
-    updateTimer();
-
-    // Regular interval
-    timerIntervalRef.current = setInterval(updateTimer, 1000);
-
-    // Visibility / Focus handler (fixes browser background throttling)
-    const handleSync = () => {
-      if (document.visibilityState === 'visible') {
-        updateTimer();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleSync);
-    window.addEventListener('focus', handleSync);
-
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      document.removeEventListener('visibilitychange', handleSync);
-      window.removeEventListener('focus', handleSync);
-    };
-  }, [sessionStartedAt]);
+  // 3. Restore AI Coach results from active session
+  useEffect(() => {
+    if (activeSession && Array.isArray(activeSession.exercises)) {
+      const restoredAi: Record<string, { reps: number; score: number }> = {};
+      activeSession.exercises.forEach((se: any) => {
+        if (se.aiCoachSessions && se.aiCoachSessions.length > 0) {
+          const latest = se.aiCoachSessions[0];
+          restoredAi[se.exerciseId] = {
+            reps: latest.totalReps,
+            score: Math.round(latest.avgFormScore),
+          };
+        } else if (se.actualReps && typeof se.actualReps === 'string' && se.actualReps.includes('AI')) {
+          const repsMatch = se.actualReps.match(/(\d+)\s*reps/i);
+          const scoreMatch = se.actualReps.match(/AI(?:\s*Score)?\s*(\d+)%/i);
+          if (repsMatch) {
+            restoredAi[se.exerciseId] = {
+              reps: parseInt(repsMatch[1], 10),
+              score: scoreMatch ? parseInt(scoreMatch[1], 10) : 85,
+            };
+          }
+        }
+      });
+      setAiCoachResults(restoredAi);
+    }
+  }, [activeSession]);
 
   // Open Start Dialog with smart date defaults
   const handleOpenStartDialog = () => {
@@ -162,9 +127,8 @@ export default function WorkoutPage() {
     setShowStartConfirm(true);
   };
 
-  // 3. Start Session execution (supports date parameter for log bù)
+  // 4. Start Session execution
   const executeStartSession = async () => {
-    if (!selectedDayId) return;
     setStarting(true);
     try {
       let chosenDateStr = new Date().toISOString();
@@ -176,103 +140,33 @@ export default function WorkoutPage() {
         chosenDateStr = new Date(customDateValue + 'T12:00:00.000Z').toISOString();
       }
 
-      const res = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workoutDayId: selectedDayId,
-          date: chosenDateStr,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.session) {
-        hapticImpact();
-        setActiveSession(data.session);
-        const isPastDate = new Date(data.session.date).toDateString() !== new Date().toDateString();
-        if (isPastDate) {
-          setElapsedSeconds(0);
-        } else {
-          const startMs = new Date(data.session.startedAt || Date.now()).getTime();
-          setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
-        }
-        setShowStartConfirm(false);
-      } else {
-        hapticWarning();
-        alert(data.error || 'Không thể khởi tạo buổi tập. Vui lòng thử lại!');
-      }
+      await startSession(selectedDayId, chosenDateStr);
+      setShowStartConfirm(false);
     } catch (err: any) {
       console.error('Failed to start session:', err);
-      hapticWarning();
-      alert('Lỗi kết nối máy chủ khi bắt đầu buổi tập: ' + (err?.message || err));
+      alert(err?.message || 'Không thể khởi tạo buổi tập. Vui lòng thử lại!');
     } finally {
       setStarting(false);
     }
   };
 
-  // 4. Toggle exercise completed & update weight/reps
+  // 5. Toggle exercise completed & update weight/reps
   const handleToggleExercise = async (exerciseId: string, currentCompleted: boolean) => {
     if (!activeSession) return;
-    const nextCompleted = !currentCompleted;
-
-    if (nextCompleted) {
+    if (!currentCompleted) {
       hapticSuccess();
     } else {
       hapticSelection();
     }
-
-    // Optimistic UI update
-    setActiveSession((prev: any) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        exercises: prev.exercises.map((se: any) =>
-          se.exerciseId === exerciseId ? { ...se, completed: nextCompleted } : se
-        ),
-      };
-    });
-
-    try {
-      await fetch(`/api/sessions/${activeSession.id}/exercises`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exerciseId,
-          completed: nextCompleted,
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to update exercise status:', err);
-    }
+    await toggleExerciseCompleted(exerciseId, currentCompleted);
   };
 
   const handleUpdateWeight = async (exerciseId: string, weightKg: number) => {
     if (!activeSession) return;
-    // Optimistic UI
-    setActiveSession((prev: any) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        exercises: prev.exercises.map((se: any) =>
-          se.exerciseId === exerciseId ? { ...se, actualWeightKg: weightKg } : se
-        ),
-      };
-    });
-
-    try {
-      await fetch(`/api/sessions/${activeSession.id}/exercises`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exerciseId,
-          actualWeightKg: weightKg,
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to update weight:', err);
-    }
+    await updateExerciseWeight(exerciseId, weightKg);
   };
 
-  // 5. Finish Session trigger
+  // 6. Finish Session trigger
   const handleFinishSession = () => {
     if (!activeSession) return;
     const isPastDate = new Date(activeSession.date).toDateString() !== new Date().toDateString();
@@ -291,72 +185,33 @@ export default function WorkoutPage() {
     setFinishing(true);
 
     try {
-      const res = await fetch(`/api/sessions/${activeSession.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          notes: sessionNotes,
-          durationMin: finishDurationMin,
-        }),
-      });
-      const data = await res.json();
-      if (data.session) {
-        hapticSuccess();
-        const completedCount = activeSession.exercises.filter((e) => e.completed).length;
-        const totalCount = activeSession.exercises.length;
-        setCompletedSummary({
-          durationMin: data.session.durationMin || finishDurationMin,
-          completedCount,
-          totalCount,
-          dayName: activeSession.workoutDay.name,
-        });
-        setActiveSession(null);
-        setElapsedSeconds(0);
+      const summary = await finishSession(sessionNotes, finishDurationMin);
+      if (summary) {
+        setCompletedSummary(summary);
         setShowFinishConfirm(false);
         setShowCompletionModal(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to finish session:', err);
+      alert(err?.message || 'Lỗi khi kết thúc buổi tập');
     } finally {
       setFinishing(false);
     }
   };
 
-  // 6. Save AI Coach result to session
+  // 7. Save AI Coach result to session
   const handleSaveAiCoachResult = async (exerciseId: string, reps: number, score: number) => {
     setAiCoachResults((prev) => ({
       ...prev,
       [exerciseId]: { reps, score },
     }));
 
-    if (!activeSession) return;
-
-    setActiveSession((prev: any) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        exercises: prev.exercises.map((se: any) =>
-          se.exerciseId === exerciseId
-            ? { ...se, completed: true, actualReps: `${reps} reps (AI ${score}%)` }
-            : se
-        ),
-      };
-    });
-
-    try {
-      await fetch(`/api/sessions/${activeSession.id}/exercises`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          exerciseId,
-          completed: true,
-          actualReps: `${reps} reps (AI Score ${score}%)`,
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to log AI Coach exercise:', err);
+    if (activeSession) {
+      await saveAiCoachResult(exerciseId, reps, score);
     }
   };
+
+  const loading = daysLoading && allDays.length === 0;
 
   const isAiExercise = (name: string) => {
     const lower = (name || '').toLowerCase();

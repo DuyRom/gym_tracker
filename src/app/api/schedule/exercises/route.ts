@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedUserOrDemo } from '@/lib/auth';
 import { ScheduleService } from '@/services/schedule.service';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * POST /api/schedule/exercises — Add exercise to day
  */

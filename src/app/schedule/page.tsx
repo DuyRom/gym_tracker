@@ -25,6 +25,7 @@ import EditExerciseModal from '@/components/schedule/EditExerciseModal';
 import MoveExerciseModal from '@/components/schedule/MoveExerciseModal';
 import ActivityTimelineModal from '@/components/schedule/ActivityTimelineModal';
 import TechniqueDetailModal from '@/components/workout/TechniqueDetailModal';
+import { useDataSync, emitDataChange } from '@/lib/data-sync';
 
 export default function SchedulePage() {
   const [days, setDays] = useState<any[]>([]);
@@ -51,7 +52,7 @@ export default function SchedulePage() {
   const loadSchedule = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/schedule');
+      const res = await fetch(`/api/schedule?_t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.days) setDays(data.days);
       if (data.logs) setLogs(data.logs);
@@ -65,6 +66,9 @@ export default function SchedulePage() {
   useEffect(() => {
     loadSchedule();
   }, []);
+
+  // Reactive sync when schedule changes
+  useDataSync(['SCHEDULE'], loadSchedule);
 
   const flashMessage = (msg: string) => {
     setStatusMessage(msg);
@@ -101,6 +105,7 @@ export default function SchedulePage() {
       const data = await res.json();
       if (data.days) {
         setDays(data.days);
+        emitDataChange('SCHEDULE');
         // Refresh logs in background
         fetch('/api/schedule/logs')
           .then((r) => r.json())
@@ -185,6 +190,7 @@ export default function SchedulePage() {
       const data = await res.json();
       if (data.days) {
         setDays(data.days);
+        emitDataChange('SCHEDULE');
         fetch('/api/schedule/logs')
           .then((r) => r.json())
           .then((l) => l.logs && setLogs(l.logs));
@@ -207,6 +213,7 @@ export default function SchedulePage() {
       const data = await res.json();
       if (data.days) {
         setDays(data.days);
+        emitDataChange('SCHEDULE');
         fetch('/api/schedule/logs')
           .then((r) => r.json())
           .then((l) => l.logs && setLogs(l.logs));
@@ -226,6 +233,7 @@ export default function SchedulePage() {
       const data = await res.json();
       if (data.days) {
         setDays(data.days);
+        emitDataChange('SCHEDULE');
         fetch('/api/schedule/logs')
           .then((r) => r.json())
           .then((l) => l.logs && setLogs(l.logs));
@@ -730,6 +738,7 @@ export default function SchedulePage() {
           onSuccess={(updatedDays) => {
             setDays(updatedDays);
             setShowAddModal(false);
+            emitDataChange('SCHEDULE');
             flashMessage('Đã thêm bài tập mới vào lịch');
             fetch('/api/schedule/logs')
               .then((r) => r.json())
@@ -747,6 +756,7 @@ export default function SchedulePage() {
           onSuccess={(updatedDays) => {
             setDays(updatedDays);
             setEditingExercise(null);
+            emitDataChange('SCHEDULE');
             flashMessage('Đã cập nhật bài tập');
             fetch('/api/schedule/logs')
               .then((r) => r.json())
@@ -766,6 +776,7 @@ export default function SchedulePage() {
           onSuccess={(updatedDays) => {
             setDays(updatedDays);
             setMovingExercise(null);
+            emitDataChange('SCHEDULE');
             flashMessage('Đã chuyển bài tập sang ngày mới');
             fetch('/api/schedule/logs')
               .then((r) => r.json())

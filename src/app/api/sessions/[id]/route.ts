@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUserOrDemo } from '@/lib/auth';
 import { SessionService } from '@/services/session.service';
+import { NO_CACHE_HEADERS } from '@/lib/api-response';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function PATCH(
   req: NextRequest,

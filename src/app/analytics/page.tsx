@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -28,6 +28,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { DashboardStatsResponse } from '@/types/stats';
+import { useDataSync } from '@/lib/data-sync';
 
 ChartJS.register(
   CategoryScale,
@@ -100,14 +101,14 @@ export default function AnalyticsPage() {
   const [loadingAi, setLoadingAi] = useState<boolean>(true);
 
   // Fetch Progressive Overload Stats
-  useEffect(() => {
-    fetch('/api/stats')
+  const loadStats = useCallback(() => {
+    fetch(`/api/stats?_t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => {
         if (data.stats) {
           setStats(data.stats);
           if (data.stats.progressions?.length > 0) {
-            setSelectedExName(data.stats.progressions[0].exerciseName);
+            setSelectedExName((prev) => prev || data.stats.progressions[0].exerciseName);
           }
         }
       })
@@ -115,9 +116,13 @@ export default function AnalyticsPage() {
       .finally(() => setLoadingStats(false));
   }, []);
 
-  // Fetch AI Coach Sessions & Stats
   useEffect(() => {
-    fetch('/api/v1/ai-coach/sessions?limit=50')
+    loadStats();
+  }, [loadStats]);
+
+  // Fetch AI Coach Sessions & Stats
+  const loadAiSessions = useCallback(() => {
+    fetch(`/api/v1/ai-coach/sessions?limit=50&_t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.data) {
@@ -128,6 +133,14 @@ export default function AnalyticsPage() {
       .catch((err) => console.error('Failed to load AI sessions:', err))
       .finally(() => setLoadingAi(false));
   }, []);
+
+  useEffect(() => {
+    loadAiSessions();
+  }, [loadAiSessions]);
+
+  // Reactive data sync
+  useDataSync(['SESSION', 'STATS'], loadStats);
+  useDataSync(['SESSION'], loadAiSessions);
 
   // --- Progressive Overload Chart ---
   const progressions = stats?.progressions || [];

@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
-import WorkoutTimerWidget from '@/components/workout/WorkoutTimerWidget';
+import ActiveWorkoutFloatingWidget from '@/components/workout/ActiveWorkoutFloatingWidget';
 import NativeAppInitializer from '@/components/NativeAppInitializer';
+import { WorkoutSessionProvider } from '@/context/WorkoutSessionContext';
 
 export const metadata: Metadata = {
   title: 'Gym Tracker - Giáo Án Thể Hình & Tăng Cơ Cho Lập Trình Viên',
@@ -45,10 +46,12 @@ export default function RootLayout({
       </head>
       <body>
         <NativeAppInitializer />
-        <Header />
-        {children}
-        <WorkoutTimerWidget />
-        <BottomNav />
+        <WorkoutSessionProvider>
+          <Header />
+          {children}
+          <ActiveWorkoutFloatingWidget />
+          <BottomNav />
+        </WorkoutSessionProvider>
 
         <script
           dangerouslySetInnerHTML={{

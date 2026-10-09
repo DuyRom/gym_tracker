@@ -11,6 +11,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import EditSessionModal from '@/components/workout/EditSessionModal';
 import { DashboardStatsResponse } from '@/types/stats';
 import { formatDateVi } from '@/lib/utils';
+import { useDataSync, emitDataChange } from '@/lib/data-sync';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
@@ -20,7 +21,7 @@ export default function DashboardPage() {
   const [sessionToEdit, setSessionToEdit] = useState<any | null>(null);
 
   const loadStats = () => {
-    fetch('/api/stats')
+    fetch(`/api/stats?_t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.stats) {
@@ -35,6 +36,9 @@ export default function DashboardPage() {
     loadStats();
   }, []);
 
+  // Reactive sync when sessions, stats or schedules are modified
+  useDataSync(['SESSION', 'SCHEDULE', 'STATS'], loadStats);
+
   const handleResetAll = async () => {
     setResetting(true);
     try {
@@ -44,6 +48,8 @@ export default function DashboardPage() {
         throw new Error(data.error || 'Reset thất bại');
       }
       setShowResetConfirm(false);
+      emitDataChange('SESSION');
+      emitDataChange('STATS');
       loadStats();
     } catch (err: any) {
       alert(err.message || 'Lỗi khi reset');

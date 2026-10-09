@@ -22,6 +22,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import EditSessionModal from '@/components/workout/EditSessionModal';
 import { formatDateVi, formatTimeVi } from '@/lib/utils';
 import { DashboardStatsResponse } from '@/types/stats';
+import { useDataSync, emitDataChange } from '@/lib/data-sync';
 
 export default function HistoryPage() {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -41,8 +42,8 @@ export default function HistoryPage() {
   const loadData = useCallback(() => {
     setLoading(true);
     Promise.all([
-      fetch('/api/sessions').then((r) => r.json()),
-      fetch('/api/stats').then((r) => r.json()),
+      fetch(`/api/sessions?_t=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/stats?_t=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()),
     ])
       .then(([sessionsData, statsData]) => {
         if (sessionsData.sessions) setSessions(sessionsData.sessions);
@@ -55,6 +56,9 @@ export default function HistoryPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Reactive sync when sessions or stats change
+  useDataSync(['SESSION', 'STATS'], loadData);
 
   const filteredSessions = sessions.filter((s) => {
     if (filter === 'COMPLETED') return s.status === 'COMPLETED';
@@ -82,6 +86,8 @@ export default function HistoryPage() {
       setNotice('Đã xóa buổi tập thành công!');
       setTimeout(() => setNotice(''), 3000);
       setSessionToDelete(null);
+      emitDataChange('SESSION');
+      emitDataChange('STATS');
       loadData();
     } catch (err: any) {
       alert(err.message || 'Lỗi khi xóa buổi tập');
@@ -105,6 +111,8 @@ export default function HistoryPage() {
       setNotice('Đã xóa toàn bộ lịch sử tập luyện và đặt lại chỉ số về 0!');
       setTimeout(() => setNotice(''), 4000);
       setShowResetConfirm(false);
+      emitDataChange('SESSION');
+      emitDataChange('STATS');
       loadData();
     } catch (err: any) {
       alert(err.message || 'Lỗi khi reset dữ liệu');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Edit3, Clock, Calendar, CheckCircle2, Dumbbell, Loader2, AlertCircle } from 'lucide-react';
+import { emitDataChange } from '@/lib/data-sync';
 
 interface EditSessionModalProps {
   isOpen: boolean;
@@ -91,6 +92,8 @@ export default function EditSessionModal({
         throw new Error(data.error || 'Cập nhật thất bại');
       }
 
+      emitDataChange('SESSION');
+      emitDataChange('STATS');
       onSaved();
       onClose();
     } catch (err: any) {

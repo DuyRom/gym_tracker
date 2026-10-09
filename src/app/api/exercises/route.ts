@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedUserOrDemo } from '@/lib/auth';
 import { ScheduleService } from '@/services/schedule.service';
 import prisma from '@/lib/prisma';
+import { NO_CACHE_HEADERS } from '@/lib/api-response';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -9,7 +13,7 @@ export async function GET() {
 
     if (user) {
       const days = await ScheduleService.getUserSchedule(user.id);
-      return NextResponse.json({ success: true, days });
+      return NextResponse.json({ success: true, days }, { headers: NO_CACHE_HEADERS });
     }
 
     // Fallback: return default template days

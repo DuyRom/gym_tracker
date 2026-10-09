@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUserOrDemo } from '@/lib/auth';
 import { ScheduleService } from '@/services/schedule.service';
+import { NO_CACHE_HEADERS } from '@/lib/api-response';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
     const user = await getAuthenticatedUserOrDemo();
     if (!user) {
-      return NextResponse.json({ error: 'Chưa đăng nhập' }, { status: 401 });
+      return NextResponse.json({ error: 'Chưa đăng nhập' }, { status: 401, headers: NO_CACHE_HEADERS });
     }
 
     const [days, logs] = await Promise.all([
@@ -14,9 +18,9 @@ export async function GET() {
       ScheduleService.getActivityLogs(user.id, 20),
     ]);
 
-    return NextResponse.json({ success: true, days, logs });
+    return NextResponse.json({ success: true, days, logs }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     console.error('API /api/schedule error:', error);
-    return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Lỗi server' }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
