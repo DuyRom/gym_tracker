@@ -170,11 +170,13 @@ export default function WorkoutPage() {
   const handleFinishSession = () => {
     if (!activeSession) return;
     const isPastDate = new Date(activeSession.date).toDateString() !== new Date().toDateString();
-    const minutesFromTimer = Math.round(elapsedSeconds / 60);
+    const minutesFromTimer = Math.max(1, Math.round(elapsedSeconds / 60));
     const plannedMin = currentSelectedDay?.durationMin || 40;
-    if (isPastDate || minutesFromTimer < 3) {
+    if (isPastDate) {
+      // Past-date (log bù): use planned duration as default
       setFinishDurationMin(plannedMin);
     } else {
+      // Today: always use real timer value
       setFinishDurationMin(minutesFromTimer);
     }
     setShowFinishConfirm(true);
@@ -818,6 +820,20 @@ export default function WorkoutPage() {
                 />
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>phút (tùy chỉnh nếu log bù)</span>
               </div>
+              {finishDurationMin < 3 && (
+                <div style={{
+                  marginTop: 8,
+                  padding: '8px 10px',
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: '#FBBF24',
+                  lineHeight: 1.5,
+                }}>
+                  ⚠️ Thời gian tập rất ngắn ({finishDurationMin} phút). Hãy kiểm tra lại hoặc chỉnh tay nếu cần.
+                </div>
+              )}
             </div>
           </div>
         }
